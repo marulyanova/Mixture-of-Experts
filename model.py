@@ -1,7 +1,8 @@
 import torch
-from torch import nn, Tensor
+from torch import nn
 from utils.positional_encoding import InputEmbedding
 from utils.multi_head_attention import MultiHeadAttention
+from utils.layer_norm import LayerNorm
 
 
 class MoETransformerEncoder(nn.Module):
@@ -32,6 +33,9 @@ class MoETransformerEncoder(nn.Module):
             d_model=input_size, n_head=num_head
         )
 
+        self.layer_norm = LayerNorm(d_model=input_size)
+
     def forward(self, x):
         input = self.input_emb(x)
         attention = self.multi_head_attention(input)
+        normed = self.layer_norm(attention + input)
