@@ -18,6 +18,7 @@ class MoETransformerEncoder(nn.Module):
         vocab_size: vocabulary size of tokenizer
         input_size: embedding size obtained by the MoE layer
         seq_len: max sequence length
+        num_head: number of heads in multi head attention
         device: device of model
         """
         super().__init__()

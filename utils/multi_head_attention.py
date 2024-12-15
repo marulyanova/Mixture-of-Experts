@@ -39,7 +39,7 @@ class ScaleDotProductAttention(nn.Module):
 
 class MultiHeadAttention(nn.Module):
 
-    def __init__(self, d_model, n_head):
+    def __init__(self, d_model: int, n_head: int):
         super(MultiHeadAttention, self).__init__()
         self.n_head = n_head
         self.attention = ScaleDotProductAttention()

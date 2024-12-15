@@ -7,7 +7,7 @@ class PositionalEncoding(nn.Module):
     compute sinusoid encoding.
     """
 
-    def __init__(self, d_model, max_len, device):
+    def __init__(self, d_model: int, max_len: int, device: torch.device):
         """
         constructor of sinusoid encoding class
 
