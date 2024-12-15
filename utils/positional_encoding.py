@@ -43,3 +43,29 @@ class PositionalEncoding(nn.Module):
         return self.encoding[:seq_len, :]
         # [seq_len = 30, d_model = 512]
         # it will add with tok_emb : [128, 30, 512]
+
+
+# input embedding + positional encoding
+class InputEmbedding(nn.Module):
+    def __init__(
+        self,
+        vocab_size: int,
+        d_model: int,
+        max_len: int,
+        device: torch.device,
+    ):
+        super(InputEmbedding, self).__init__()
+        self.input_embedding = nn.Embedding(
+            num_embeddings=vocab_size, embedding_dim=d_model
+        )
+        self.positional_encoding = PositionalEncoding(
+            d_model=d_model, max_len=max_len, device=device
+        )
+
+    def forward(self, x):
+        # x : [batch_size, seq_len]
+        embedded = self.input_embedding(x)  # [batch_size, seq_len, d_model]
+        pos_enc = self.positional_encoding(
+            embedded
+        )  # [seq_len, d_model] -> it will be broadcasted for each batch
+        return embedded + pos_enc
