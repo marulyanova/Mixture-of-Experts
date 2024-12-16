@@ -7,7 +7,7 @@ class PositionalEncoding(nn.Module):
     compute sinusoid encoding.
     """
 
-    def __init__(self, d_model: int, max_len: int, device: torch.device):
+    def __init__(self, embedding_dim: int, max_len: int, device: torch.device):
         """
         constructor of sinusoid encoding class
 
@@ -18,7 +18,7 @@ class PositionalEncoding(nn.Module):
         super(PositionalEncoding, self).__init__()
 
         # same size with input matrix (for adding with input matrix)
-        self.encoding = torch.zeros(max_len, d_model, device=device)
+        self.encoding = torch.zeros(max_len, embedding_dim, device=device)
         self.encoding.requires_grad = False  # we don't need to compute gradient
 
         pos = torch.arange(0, max_len, device=device)
@@ -29,8 +29,8 @@ class PositionalEncoding(nn.Module):
         # 'i' means index of d_model (e.g. embedding size = 50, 'i' = [0,50])
         # "step=2" means 'i' multiplied with two (same with 2 * i)
 
-        self.encoding[:, 0::2] = torch.sin(pos / (10000 ** (_2i / d_model)))
-        self.encoding[:, 1::2] = torch.cos(pos / (10000 ** (_2i / d_model)))
+        self.encoding[:, 0::2] = torch.sin(pos / (10000 ** (_2i / embedding_dim)))
+        self.encoding[:, 1::2] = torch.cos(pos / (10000 ** (_2i / embedding_dim)))
         # compute positional encoding to consider positional information of words
 
     def forward(self, x):
@@ -50,16 +50,16 @@ class InputEmbedding(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        d_model: int,
+        embedding_dim: int,
         max_len: int,
         device: torch.device,
     ):
         super(InputEmbedding, self).__init__()
         self.input_embedding = nn.Embedding(
-            num_embeddings=vocab_size, embedding_dim=d_model
+            num_embeddings=vocab_size, embedding_dim=embedding_dim
         )
         self.positional_encoding = PositionalEncoding(
-            d_model=d_model, max_len=max_len, device=device
+            embedding_dim=embedding_dim, max_len=max_len, device=device
         )
 
     def forward(self, x):

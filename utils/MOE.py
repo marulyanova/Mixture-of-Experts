@@ -5,10 +5,10 @@ import torch.nn.functional as F
 
 class PositionwiseFeedForward(nn.Module):
 
-    def __init__(self, d_model: int, hidden: int, drop_prob: float = 0.1):
+    def __init__(self, embedding_dim: int, hidden: int, drop_prob: float = 0.1):
         super(PositionwiseFeedForward, self).__init__()
-        self.linear1 = nn.Linear(d_model, hidden)
-        self.linear2 = nn.Linear(hidden, d_model)
+        self.linear1 = nn.Linear(embedding_dim, hidden)
+        self.linear2 = nn.Linear(hidden, embedding_dim)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=drop_prob)
 
@@ -25,17 +25,17 @@ class MoELayer(nn.Module):
         self,
         n_experts: int,
         n_gates: int,
-        input_size: int,
+        embedding_dim: int,
         vocab_size: int,
     ):
         super(MoELayer, self).__init__()
 
         self.gates = nn.ModuleList(
-            [nn.Linear(input_size, n_experts) for _ in range(n_gates)]
+            [nn.Linear(embedding_dim, n_experts) for _ in range(n_gates)]
         )
         self.experts = nn.ModuleList(
             [
-                PositionwiseFeedForward(d_model=input_size, hidden=vocab_size)
+                PositionwiseFeedForward(embedding_dim=embedding_dim, hidden=vocab_size)
                 for _ in range(n_experts)
             ]
         )  # predict probabilities of tokens in vocabulary

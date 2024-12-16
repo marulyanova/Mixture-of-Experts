@@ -10,35 +10,39 @@ class EncoderBlock(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        input_size: int,
+        embedding_dim: int,
         seq_len: int,
         num_head: int,
         n_experts: int,
         n_gates: int,
+        head_dim: int,
+        moe_dim: int,
         device: torch.device,
     ):
         """
         vocab_size: vocabulary size of tokenizer
-        input_size: embedding size obtained by the MoE layer
+        embedding_dim: embedding size obtained by the MoE layer
         seq_len: max sequence length
         num_head: number of heads in multi head attention
         n_experts: number of experts for each gate
         n_gates: nubmer of gates on MOE-block
+        head_dim: dimensional of Q, K, W
+        moe_dim: dimensional of one expert's FFN layer
         device: device of model
         """
         super(EncoderBlock).__init__()
 
         self.multi_head_attention = MultiHeadAttention(
-            d_model=input_size, n_head=num_head
+            head_dim=head_dim, n_head=num_head
         )
 
-        self.layer_norm1 = LayerNorm(d_model=input_size)
-        self.layer_norm2 = LayerNorm(d_model=input_size)
+        self.layer_norm1 = LayerNorm(embedding_dim=embedding_dim)
+        self.layer_norm2 = LayerNorm(embedding_dim=embedding_dim)
 
         self.moe_block = MoELayer(
             n_experts=n_experts,
             n_gates=n_gates,
-            input_size=input_size,
+            embedding_dim=embedding_dim,
             vocab_size=vocab_size,
         )
 
@@ -56,12 +60,14 @@ class MoETransformerEncoder(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        input_size: int,
+        embedding_dim: int,
         seq_len: int,
         num_head: int,
         n_experts: int,
         n_gates: int,
         n_encoder_blocks: int,
+        head_dim: int,
+        moe_dim: int,
         device: torch.device,
     ):
         """
@@ -71,7 +77,7 @@ class MoETransformerEncoder(nn.Module):
 
         self.input_emb = InputEmbedding(
             vocab_size=vocab_size,
-            d_model=input_size,
+            embedding_dim=embedding_dim,
             max_len=seq_len,
             device=device,
         )
@@ -80,11 +86,13 @@ class MoETransformerEncoder(nn.Module):
             [
                 EncoderBlock(
                     vocab_size=vocab_size,
-                    input_size=input_size,
+                    embedding_dim=embedding_dim,
                     seq_len=seq_len,
                     num_head=num_head,
                     n_experts=n_experts,
                     n_gates=n_gates,
+                    head_dim=head_dim,
+                    moe_dim=moe_dim,
                     device=device,
                 )
             ]
@@ -92,6 +100,16 @@ class MoETransformerEncoder(nn.Module):
         )
 
     def forward(self, x):
+
+        # x: [batch_size, seq_len]
+
         input = self.input_emb(x)
+
+        # input: [batch_size, seq_len, embedding_dim]
+
         transformer_output = self.moe_transformer(input)
         return transformer_output
+
+
+# TODO fix the MultiHeadAttentionLayer to Pavlenko's version
+# TODO fix all the passed parameters

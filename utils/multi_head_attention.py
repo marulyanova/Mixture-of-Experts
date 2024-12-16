@@ -39,14 +39,14 @@ class ScaleDotProductAttention(nn.Module):
 
 class MultiHeadAttention(nn.Module):
 
-    def __init__(self, d_model: int, n_head: int):
+    def __init__(self, embedding_dim: int, head_dim: int, n_head: int):
         super(MultiHeadAttention, self).__init__()
         self.n_head = n_head
         self.attention = ScaleDotProductAttention()
-        self.w_q = nn.Linear(d_model, d_model)
-        self.w_k = nn.Linear(d_model, d_model)
-        self.w_v = nn.Linear(d_model, d_model)
-        self.w_concat = nn.Linear(d_model, d_model)
+        self.w_q = nn.Linear(embedding_dim, head_dim)
+        self.w_k = nn.Linear(embedding_dim, head_dim)
+        self.w_v = nn.Linear(embedding_dim, head_dim)
+        self.w_concat = nn.Linear(embedding_dim, embedding_dim)
 
     def forward(self, q, k, v, mask=None):
         # 1. dot product with weight matrices
