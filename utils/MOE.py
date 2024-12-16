@@ -55,11 +55,14 @@ class MoELayer(nn.Module):
         gates_respond = [F.softmax(self.gates[i](x)) for i in range(self.n_gates)]
         expert_preds = [F.softmax(self.experts[i](x)) for i in range(self.n_experts)]
 
-        # gates_respond имеет размер [n_gates, batch_size, n_experts]
-        # expert_preds имеет размер [n_experts, batch_size, vocab_size]
+        # gates_respond [n_gates, batch_size, n_experts]
+        # expert_preds [n_experts, batch_size, vocab_size]
 
         # Для каждого гейта, мы берем его отклики и умножаем на предсказания экспертов
         # Мы используем torch.einsum для более эффективного вычисления
         moe_prediction = torch.einsum("gbe,ebv->bv", gates_respond, expert_preds)
 
-        return moe_prediction
+        return (
+            moe_prediction,
+            gates_respond,
+        )  # block preds + info from gates about the selected experts
