@@ -45,18 +45,11 @@ class MoELayer(nn.Module):
 
     def forward(self, x):
 
-        gates_respond = [
-            F.softmax(gate(x), dim=-1) for gate in self.gates
-        ]  # [n_gates, batch_size, n_experts]
-        expert_preds = torch.stack(
-            [expert(x) for expert in self.experts]
-        )  # [n_experts, batch_size, vocab_size]
-
-        gates_respond = [F.softmax(self.gates[i](x)) for i in range(self.n_gates)]
-        expert_preds = [F.softmax(self.experts[i](x)) for i in range(self.n_experts)]
+        gates_respond = [F.softmax(gate(x), dim=-1) for gate in self.gates]
+        expert_preds = torch.stack([expert(x) for expert in self.experts])
 
         # gates_respond [n_gates, batch_size, n_experts]
-        # expert_preds [n_experts, batch_size, vocab_size]
+        # expert_preds [n_experts, batch_size, embedding_dim]
 
         # Для каждого гейта, мы берем его отклики и умножаем на предсказания экспертов
         # Мы используем torch.einsum для более эффективного вычисления

@@ -30,7 +30,7 @@ class EncoderBlock(nn.Module):
         moe_dim: dimensional of one expert's FFN layer
         device: device of model
         """
-        super(EncoderBlock).__init__()
+        super(EncoderBlock, self).__init__()
 
         self.multi_head_attention = MultiHeadAttention_Parallel(
             embed_size=embedding_dim,
@@ -91,7 +91,7 @@ class MoETransformerEncoder(nn.Module):
         """
         n_encoder_blocks: number of encoder blocks in the architecture
         """
-        super(MoETransformerEncoder).__init__()
+        super(MoETransformerEncoder, self).__init__()
 
         self.input_emb = InputEmbedding(
             vocab_size=vocab_size,
