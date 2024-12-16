@@ -64,7 +64,7 @@ class InputEmbedding(nn.Module):
 
     def forward(self, x):
         # x : [batch_size, seq_len]
-        embedded = self.input_embedding(x)  # [batch_size, seq_len, d_model]
+        embedded = self.input_embedding(x)  # [batch_size, seq_len, embedding_dim]
         pos_enc = self.positional_encoding(
             embedded
         )  # [seq_len, d_model] -> it will be broadcasted for each batch

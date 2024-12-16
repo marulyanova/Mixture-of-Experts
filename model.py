@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from utils.positional_encoding import InputEmbedding
-from utils.multi_head_attention import MultiHeadAttention
+from utils.multi_head_attention import MultiHeadAttention_Parallel
 from utils.layer_norm import LayerNorm
 from utils.MOE import MoELayer
 
@@ -32,8 +32,11 @@ class EncoderBlock(nn.Module):
         """
         super(EncoderBlock).__init__()
 
-        self.multi_head_attention = MultiHeadAttention(
-            head_dim=head_dim, n_head=num_head
+        self.multi_head_attention = MultiHeadAttention_Parallel(
+            embed_size=embedding_dim,
+            num_heads=num_head,
+            head_size=head_dim,
+            block_size=seq_len,
         )
 
         self.layer_norm1 = LayerNorm(embedding_dim=embedding_dim)
@@ -43,16 +46,31 @@ class EncoderBlock(nn.Module):
             n_experts=n_experts,
             n_gates=n_gates,
             embedding_dim=embedding_dim,
-            vocab_size=vocab_size,
+            moe_hidden=moe_dim,
         )
 
     def forward(self, input):
+
+        # input: [batch_size, seq_len, embedding_dim]
+
         attention = self.multi_head_attention(input)
+
+        # attention: [batch_size, seq_len, embedding_dim]
+
         normed = self.layer_norm1(attention + input)
+
+        # normed: [batch_size, seq_len, embedding_dim]
+
         moe_output, gates_respond = self.moe_block(
             normed
         )  # return gates_respond for further analytics. TODO write extra logic for process it
+
+        # moe_output: [batch_size, seq_len, embedding_dim]
+        # gates_respond: [n_gates, batch_size, n_experts]
+
         normed = self.layer_norm2(moe_output + normed)
+        # normed: [batch_size, seq_len, embedding_dim]
+
         return normed
 
 
@@ -99,6 +117,8 @@ class MoETransformerEncoder(nn.Module):
             for _ in range(n_encoder_blocks)
         )
 
+        self.lm_head = nn.Linear(embedding_dim, vocab_size)
+
     def forward(self, x):
 
         # x: [batch_size, seq_len]
@@ -108,8 +128,11 @@ class MoETransformerEncoder(nn.Module):
         # input: [batch_size, seq_len, embedding_dim]
 
         transformer_output = self.moe_transformer(input)
-        return transformer_output
 
+        # transformer_output: [batch_size, seq_len, embedding_dim]
 
-# TODO fix the MultiHeadAttentionLayer to Pavlenko's version
-# TODO fix all the passed parameters
+        preds = self.lm_head(transformer_output)
+
+        # preds: [batch_size, seq_len, vocab_size]
+
+        return preds

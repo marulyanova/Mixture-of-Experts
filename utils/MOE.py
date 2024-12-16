@@ -26,7 +26,7 @@ class MoELayer(nn.Module):
         n_experts: int,
         n_gates: int,
         embedding_dim: int,
-        vocab_size: int,
+        moe_hidden: int,
     ):
         super(MoELayer, self).__init__()
 
@@ -35,7 +35,7 @@ class MoELayer(nn.Module):
         )
         self.experts = nn.ModuleList(
             [
-                PositionwiseFeedForward(embedding_dim=embedding_dim, hidden=vocab_size)
+                PositionwiseFeedForward(embedding_dim=embedding_dim, hidden=moe_hidden)
                 for _ in range(n_experts)
             ]
         )  # predict probabilities of tokens in vocabulary
