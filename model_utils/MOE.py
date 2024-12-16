@@ -38,7 +38,7 @@ class MoELayer(nn.Module):
                 PositionwiseFeedForward(embedding_dim=embedding_dim, hidden=moe_hidden)
                 for _ in range(n_experts)
             ]
-        )  # predict probabilities of tokens in vocabulary
+        )
 
         self.n_gates = n_gates
         self.n_experts = n_experts

@@ -1,9 +1,9 @@
 import torch
 from torch import nn
-from utils.positional_encoding import InputEmbedding
-from utils.multi_head_attention import MultiHeadAttention_Parallel
-from utils.layer_norm import LayerNorm
-from utils.MOE import MoELayer
+from model_utils.positional_encoding import InputEmbedding
+from model_utils.multi_head_attention import MultiHeadAttention_Parallel
+from model_utils.layer_norm import LayerNorm
+from model_utils.MOE import MoELayer
 
 
 class EncoderBlock(nn.Module):
