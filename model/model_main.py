@@ -125,19 +125,19 @@ class MoETransformerEncoder(nn.Module):
 
     def forward(self, x):
 
-        print(f"input transform shape: {x.shape}")  # TODO: remove
+        # print(f"input transform shape: {x.shape}")  # TODO: remove
 
         # x: [batch_size, seq_len]
 
         input = self.input_emb(x)
 
-        print(f"emb transfrom shape: {x.shape}")  # TODO: remove
+        # print(f"emb transfrom shape: {x.shape}")  # TODO: remove
 
         # input: [batch_size, seq_len, embedding_dim]
 
         transformer_output = self.moe_transformer(input)
 
-        print(f"transformer output shape: {x.shape}")  # TODO: remove
+        # print(f"transformer output shape: {x.shape}")  # TODO: remove
 
         # transformer_output: [batch_size, seq_len, embedding_dim]
 
