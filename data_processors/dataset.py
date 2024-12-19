@@ -10,7 +10,7 @@ import pandas as pd
 
 from config_utils.load_config import load_params_from_yaml, DataParamsSchema
 
-from dataset.load_dataset import load_dataset
+from data_processors.load_dataset import load_dataset
 
 def load_as_hf_dataset(datapath: Path) -> Dataset:
     #TODO if file does not exist load with load_dataset func
@@ -23,7 +23,7 @@ def load_as_hf_dataset(datapath: Path) -> Dataset:
 @click.option('--config-name', type=Path, required=True)
 def main(config_name):
     dataset_params = load_params_from_yaml(config_name, DataParamsSchema)
-    dataset = load_as_hf_dataset(dataset_params.data_params.train_data_path)
+    dataset = load_as_hf_dataset(dataset_params.load_params.raw_data_path)
     print(dataset[0])
     
     return 

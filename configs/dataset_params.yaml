@@ -1,9 +1,9 @@
 load_params: 
   dataset_url: "sentence-transformers/reddit-title-body"
   train_len: 100000
-  valid_len: 1000
-  test_len: 10000
-  raw_data_path: "dataset/data/raw/data.csv"
+  valid_len: 10000
+  test_len: 1000
+  raw_data_path: "data/raw/data.csv"
 data_params:
   subreddit1: 'music'
   subreddit2: 'gaming'
