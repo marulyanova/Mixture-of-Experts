@@ -13,6 +13,8 @@ from config_utils.load_config import load_params_from_yaml, ModelParamsSchema
 def main(config_name):
     model_params = load_params_from_yaml(config_name, ModelParamsSchema)
     print(model_params)
+
+    print(10)
     return 
 
 

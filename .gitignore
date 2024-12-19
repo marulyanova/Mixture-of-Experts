@@ -3,3 +3,4 @@ test.py
 venv
 __pycache__/
 *.py[cod]
+.vscode
