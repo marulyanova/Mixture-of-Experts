@@ -1,0 +1,12 @@
+load_params:
+  dataset_url: "sentence-transformers/reddit-title-body"
+  data_len: 1000
+  raw_data_path: "dataset/data/raw/data.csv"
+data_params:
+  subreddit1: 'music'
+  subreddit2: 'gaming'
+  mask_prob: 0.15
+  train_data_path: "data/processed/train.csv"
+  test_data_path: "data/processed/test.csv"
+random_state: 11
+seed: 11
