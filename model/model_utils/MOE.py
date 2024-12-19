@@ -88,7 +88,7 @@ class MoELayer(nn.Module):
                 # Update final output additively by indexing and adding
                 final_output[expert_mask] += weighted_output.squeeze(1)
 
-        return final_output, indices
+        return final_output, indices.squeeze(-1)
 
         # # gates_respond = torch.stack([F.softmax(gate(x), dim=-1) for gate in self.gates])
 

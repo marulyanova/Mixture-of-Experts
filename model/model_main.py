@@ -73,7 +73,7 @@ class EncoderBlock(nn.Module):
         normed = self.layer_norm2(moe_output + normed)
         # normed: [batch_size, seq_len, embedding_dim]
 
-        return normed
+        return normed, gates_respond
 
 
 class MoETransformerEncoder(nn.Module):
@@ -135,14 +135,22 @@ class MoETransformerEncoder(nn.Module):
 
         # input: [batch_size, seq_len, embedding_dim]
 
-        transformer_output = self.moe_transformer(input)
+        block_iteration = 0
+        input_iteration = input
+        gate_respond = torch.tensor([])
+        while block_iteration < len(self.moe_transformer):
+            input_iteration, gate_respond_iteration = self.moe_transformer[
+                block_iteration
+            ](input_iteration)
+            gate_respond = torch.cat((gate_respond, gate_respond_iteration), dim=0)
+            block_iteration += 1
 
         # print(f"transformer output shape: {x.shape}")  # TODO: remove
 
         # transformer_output: [batch_size, seq_len, embedding_dim]
 
-        preds = self.lm_head(transformer_output)
+        preds = self.lm_head(input_iteration)
 
         # preds: [batch_size, seq_len, vocab_size]
 
-        return preds
+        return preds, gate_respond
