@@ -1,10 +1,10 @@
-vocab_size: 300
-embedding_dim: 300
-seq_len: 300
+vocab_size: 512 
+embedding_dim: 256
+seq_len: 512
 num_head: 8
-n_experts: 8
+n_experts: 4
 n_gates: 2
-n_encoder_blocks: 8
-head_dim: 300
-moe_dim: 300
-device: cpu
+n_encoder_blocks: 3
+head_dim: 512
+moe_dim: 512
+device: cpu # or mps?
