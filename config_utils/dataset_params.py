@@ -5,3 +5,5 @@ class DatasetParams:
     n_samples: int
     shuffle: bool
     test_data_size: float
+    tokenizer_name: str
+    data_path: str

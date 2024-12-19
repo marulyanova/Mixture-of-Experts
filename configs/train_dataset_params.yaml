@@ -1,3 +1,5 @@
 n_samples: 110000
 shuffle: True
 test_data_size: 0.1
+tokenizer_name: "bert-base-uncased"
+data_path: "data/data.csv"

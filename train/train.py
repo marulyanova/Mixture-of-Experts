@@ -14,7 +14,6 @@ def main(config_name):
     model_params = load_params_from_yaml(config_name, ModelParamsSchema)
     print(model_params)
 
-    print(10)
     return 
 
 
