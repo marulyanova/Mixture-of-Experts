@@ -100,32 +100,40 @@ class MoETransformerEncoder(nn.Module):
             device=device,
         )
 
-        self.moe_transformer = nn.ModuleList(
-            EncoderBlock(
-                vocab_size=vocab_size,
-                embedding_dim=embedding_dim,
-                seq_len=seq_len,
-                num_head=num_head,
-                n_experts=n_experts,
-                n_gates=n_gates,
-                head_dim=head_dim,
-                moe_dim=moe_dim,
-                device=device,
+        self.moe_transformer = nn.Sequential(
+            *nn.ModuleList(
+                EncoderBlock(
+                    vocab_size=vocab_size,
+                    embedding_dim=embedding_dim,
+                    seq_len=seq_len,
+                    num_head=num_head,
+                    n_experts=n_experts,
+                    n_gates=n_gates,
+                    head_dim=head_dim,
+                    moe_dim=moe_dim,
+                    device=device,
+                )
+                for _ in range(n_encoder_blocks)
             )
-            for _ in range(n_encoder_blocks)
         )
 
         self.lm_head = nn.Linear(embedding_dim, vocab_size)
 
     def forward(self, x):
 
+        print(f"input transform shape: {x.shape}")  # TODO: remove
+
         # x: [batch_size, seq_len]
 
         input = self.input_emb(x)
 
+        print(f"emb transfrom shape: {x.shape}")  # TODO: remove
+
         # input: [batch_size, seq_len, embedding_dim]
 
         transformer_output = self.moe_transformer(input)
+
+        print(f"transformer output shape: {x.shape}")  # TODO: remove
 
         # transformer_output: [batch_size, seq_len, embedding_dim]
 

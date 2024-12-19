@@ -37,7 +37,9 @@ class PositionalEncoding(nn.Module):
         # self.encoding
         # [max_len = 512, embedding_dim = 512]
 
-        _, seq_len = x.size()
+        print(f"input pos enc shape: {x.shape}")  # TODO: remove
+
+        _, seq_len, _ = x.size()
         # [batch_size (_) = 128, seq_len = 30]
 
         return self.encoding[:seq_len, :]
@@ -64,7 +66,13 @@ class InputEmbedding(nn.Module):
 
     def forward(self, x):
         # x : [batch_size, seq_len]
+
+        print(f"input shape: {x.shape}")  # TODO: remove
+
         embedded = self.input_embedding(x)  # [batch_size, seq_len, embedding_dim]
+
+        print(f"embedded shape: {x.shape}")  # TODO: remove
+
         pos_enc = self.positional_encoding(
             embedded
         )  # [seq_len, embedding_dim] -> it will be broadcasted for each batch

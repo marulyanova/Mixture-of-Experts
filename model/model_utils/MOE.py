@@ -30,12 +30,14 @@ class MoELayer(nn.Module):
     ):
         super(MoELayer, self).__init__()
 
-        self.gates = nn.ModuleList(
-            nn.Linear(embedding_dim, n_experts) for _ in range(n_gates)
+        self.gates = nn.Sequential(
+            *nn.ModuleList(nn.Linear(embedding_dim, n_experts) for _ in range(n_gates))
         )
-        self.experts = nn.ModuleList(
-            PositionwiseFeedForward(embedding_dim=embedding_dim, hidden=moe_hidden)
-            for _ in range(n_experts)
+        self.experts = nn.Sequential(
+            *nn.ModuleList(
+                PositionwiseFeedForward(embedding_dim=embedding_dim, hidden=moe_hidden)
+                for _ in range(n_experts * n_gates)
+            )
         )
 
         self.n_gates = n_gates
@@ -43,15 +45,21 @@ class MoELayer(nn.Module):
 
     def forward(self, x):
 
-        gates_respond = [F.softmax(gate(x), dim=-1) for gate in self.gates]
-        expert_preds = torch.stack([expert(x) for expert in self.experts])
+        batch_size, max_len, embbeding_size = x.size()
 
-        # gates_respond [n_gates, batch_size, n_experts]
-        # expert_preds [n_experts, batch_size, embedding_dim]
+        gates_respond = torch.stack([F.softmax(gate(x), dim=-1) for gate in self.gates])
+        print(gates_respond.shape, "gate respond")  # TODO: remove
+        expert_preds = torch.stack([expert(x) for expert in self.experts]).reshape(
+            self.n_gates, self.n_experts, batch_size, max_len, embbeding_size
+        )
+        print(expert_preds.shape, "expert preds")  # TODO: remove
+
+        # gates_respond [n_gates, batch_size, seq_len, n_experts]
+        # expert_preds  [n_experts, batch_size, seq_len, embedding_dim]
 
         # Для каждого гейта, мы берем его отклики и умножаем на предсказания экспертов
         # Мы используем torch.einsum для более эффективного вычисления
-        moe_prediction = torch.einsum("gbe,ebv->bv", gates_respond, expert_preds)
+        moe_prediction = torch.einsum("gbs,esv->bv", gates_respond, expert_preds)
 
         return (
             moe_prediction,
