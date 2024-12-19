@@ -17,6 +17,7 @@ class EncoderBlock(nn.Module):
         n_gates: int,
         head_dim: int,
         moe_dim: int,
+        top_k_experts: int,
         device: torch.device,
     ):
         """
@@ -47,6 +48,7 @@ class EncoderBlock(nn.Module):
             n_gates=n_gates,
             embedding_dim=embedding_dim,
             moe_hidden=moe_dim,
+            top_k_experts=top_k_experts,
         )
 
     def forward(self, input):
@@ -86,6 +88,7 @@ class MoETransformerEncoder(nn.Module):
         n_encoder_blocks: int,
         head_dim: int,
         moe_dim: int,
+        top_k_experts: int,
         device: str,
     ):
         """
@@ -111,6 +114,7 @@ class MoETransformerEncoder(nn.Module):
                     n_gates=n_gates,
                     head_dim=head_dim,
                     moe_dim=moe_dim,
+                    top_k_experts=top_k_experts,
                     device=device,
                 )
                 for _ in range(n_encoder_blocks)
