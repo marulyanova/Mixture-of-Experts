@@ -18,10 +18,14 @@ class LoadParams:
     raw_data_path: str
     dataset_url: str
     train_len: int = field(
-        default=200000, metadata={"validate": marshmallow.validate.Range(min=1000)}
+        default=100000, metadata={"validate": marshmallow.validate.Range(min=1000)}
     )
-    valid_len: int
-    test_len: int
+    valid_len: int = field(
+        default=1000, metadata={"validate": marshmallow.validate.Range(min=1000)}
+    )
+    test_len: int = field(
+        default=10000, metadata={"validate": marshmallow.validate.Range(min=1000)}
+    )
 
 @dataclass
 class DataParams:

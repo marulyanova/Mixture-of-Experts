@@ -12,18 +12,20 @@ from config_utils.load_config import load_params_from_yaml, DataParamsSchema
 
 from dataset.load_dataset import load_dataset
 
+def load_as_hf_dataset(datapath: Path) -> Dataset:
+    #TODO if file does not exist load with load_dataset func
+    df = pd.read_csv(datapath)
+    dataset = Dataset.from_pandas(df[["title", "body", "subreddit"]])
+    return dataset
+
 
 @click.command()
 @click.option('--config-name', type=Path, required=True)
 def main(config_name):
-    data_params = load_params_from_yaml(config_name, DataParamsSchema)
-
-    df = pd.read_csv(data_params.data_params.train_data_path)
-
-    dataset = Dataset.from_pandas(df[["title", "body", "subreddit"]])
+    dataset_params = load_params_from_yaml(config_name, DataParamsSchema)
+    dataset = load_as_hf_dataset(dataset_params.data_params.train_data_path)
     print(dataset[0])
     
-    tokenizer = BertTokenizerFast.from_pretrained(data_params.data_params.tokenizer_name)
     return 
 
 if __name__=="__main__":

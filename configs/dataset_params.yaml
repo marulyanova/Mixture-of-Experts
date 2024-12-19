@@ -3,7 +3,6 @@ load_params:
   train_len: 100000
   valid_len: 1000
   test_len: 10000
-  test_data_size: 0.1
   raw_data_path: "dataset/data/raw/data.csv"
 data_params:
   subreddit1: 'music'
