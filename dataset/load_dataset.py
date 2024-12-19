@@ -10,7 +10,7 @@ def load_dataset(load_params: LoadParams):
     subset = []
     for i, record in enumerate(dataset):
         subset.append(record)
-        if i >= load_params.data_len: 
+        if i >= load_params.train_len: 
             break
 
     df = pd.DataFrame(subset)

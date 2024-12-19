@@ -1,12 +1,17 @@
-load_params:
+load_params: 
   dataset_url: "sentence-transformers/reddit-title-body"
-  data_len: 1000
+  train_len: 100000
+  valid_len: 1000
+  test_len: 10000
+  test_data_size: 0.1
   raw_data_path: "dataset/data/raw/data.csv"
 data_params:
   subreddit1: 'music'
   subreddit2: 'gaming'
   mask_prob: 0.15
+  tokenizer_name: "bert-base-uncased"
   train_data_path: "data/processed/train.csv"
+  validate_data_path: "data/processed/valid.csv"
   test_data_path: "data/processed/test.csv"
 random_state: 11
 seed: 11

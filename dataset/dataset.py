@@ -18,12 +18,12 @@ from dataset.load_dataset import load_dataset
 def main(config_name):
     data_params = load_params_from_yaml(config_name, DataParamsSchema)
 
-    df = pd.read_csv(data_params.dataset_params.data_path)
+    df = pd.read_csv(data_params.data_params.train_data_path)
 
     dataset = Dataset.from_pandas(df[["title", "body", "subreddit"]])
     print(dataset[0])
     
-    tokenizer = BertTokenizerFast.from_pretrained(data_params.dataset_params.tokenizer_name)
+    tokenizer = BertTokenizerFast.from_pretrained(data_params.data_params.tokenizer_name)
     return 
 
 if __name__=="__main__":
