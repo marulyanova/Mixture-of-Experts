@@ -31,13 +31,11 @@ class MoELayer(nn.Module):
         super(MoELayer, self).__init__()
 
         self.gates = nn.ModuleList(
-            [nn.Linear(embedding_dim, n_experts) for _ in range(n_gates)]
+            nn.Linear(embedding_dim, n_experts) for _ in range(n_gates)
         )
         self.experts = nn.ModuleList(
-            [
-                PositionwiseFeedForward(embedding_dim=embedding_dim, hidden=moe_hidden)
-                for _ in range(n_experts)
-            ]
+            PositionwiseFeedForward(embedding_dim=embedding_dim, hidden=moe_hidden)
+            for _ in range(n_experts)
         )
 
         self.n_gates = n_gates

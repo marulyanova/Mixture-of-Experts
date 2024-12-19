@@ -101,19 +101,17 @@ class MoETransformerEncoder(nn.Module):
         )
 
         self.moe_transformer = nn.ModuleList(
-            [
-                EncoderBlock(
-                    vocab_size=vocab_size,
-                    embedding_dim=embedding_dim,
-                    seq_len=seq_len,
-                    num_head=num_head,
-                    n_experts=n_experts,
-                    n_gates=n_gates,
-                    head_dim=head_dim,
-                    moe_dim=moe_dim,
-                    device=device,
-                )
-            ]
+            EncoderBlock(
+                vocab_size=vocab_size,
+                embedding_dim=embedding_dim,
+                seq_len=seq_len,
+                num_head=num_head,
+                n_experts=n_experts,
+                n_gates=n_gates,
+                head_dim=head_dim,
+                moe_dim=moe_dim,
+                device=device,
+            )
             for _ in range(n_encoder_blocks)
         )
 
