@@ -11,7 +11,7 @@ class PositionalEncoding(nn.Module):
         """
         constructor of sinusoid encoding class
 
-        :param d_model: dimension of model
+        :param embedding_dim: dimension of model
         :param max_len: max sequence length
         :param device: hardware device setting
         """
@@ -25,8 +25,8 @@ class PositionalEncoding(nn.Module):
         pos = pos.float().unsqueeze(dim=1)
         # 1D => 2D unsqueeze to represent word's position
 
-        _2i = torch.arange(0, d_model, step=2, device=device).float()
-        # 'i' means index of d_model (e.g. embedding size = 50, 'i' = [0,50])
+        _2i = torch.arange(0, embedding_dim, step=2, device=device).float()
+        # 'i' means index of embedding_dim (e.g. embedding size = 50, 'i' = [0,50])
         # "step=2" means 'i' multiplied with two (same with 2 * i)
 
         self.encoding[:, 0::2] = torch.sin(pos / (10000 ** (_2i / embedding_dim)))
@@ -35,13 +35,13 @@ class PositionalEncoding(nn.Module):
 
     def forward(self, x):
         # self.encoding
-        # [max_len = 512, d_model = 512]
+        # [max_len = 512, embedding_dim = 512]
 
         _, seq_len = x.size()
         # [batch_size (_) = 128, seq_len = 30]
 
         return self.encoding[:seq_len, :]
-        # [seq_len = 30, d_model = 512]
+        # [seq_len = 30, embedding_dim = 512]
         # it will add with tok_emb : [128, 30, 512]
 
 
@@ -67,5 +67,5 @@ class InputEmbedding(nn.Module):
         embedded = self.input_embedding(x)  # [batch_size, seq_len, embedding_dim]
         pos_enc = self.positional_encoding(
             embedded
-        )  # [seq_len, d_model] -> it will be broadcasted for each batch
+        )  # [seq_len, embedding_dim] -> it will be broadcasted for each batch
         return embedded + pos_enc
