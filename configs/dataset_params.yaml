@@ -1,16 +1,20 @@
 load_params: 
   dataset_url: "sentence-transformers/reddit-title-body"
-  train_len: 100000
-  valid_len: 10000
-  test_len: 1000
+  train_len: 60000
+  valid_len: 1000
+  test_len: 6000
   raw_data_path: "data/raw/data.csv"
 data_params:
-  subreddit1: 'music'
+  subreddit1: 'programming'
   subreddit2: 'gaming'
+  subreddits: []
+  #['music', 'gaming','AskReddit', 'programming', 'science', 'politics', 'apple', 'books', 'movies', 'trees', 'reddit.com', 'Pets', 'guns', 'IAmA', 'self']
   mask_prob: 0.15
   tokenizer_name: "bert-base-uncased"
   train_data_path: "data/processed/train.csv"
   validate_data_path: "data/processed/valid.csv"
   test_data_path: "data/processed/test.csv"
+  subset1_path: "data/processed/subset1.csv"
+  subset2_path: "data/processed/subset2.csv"
 random_state: 11
 seed: 11
