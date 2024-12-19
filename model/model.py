@@ -86,7 +86,7 @@ class MoETransformerEncoder(nn.Module):
         n_encoder_blocks: int,
         head_dim: int,
         moe_dim: int,
-        device: torch.device,
+        device: str,
     ):
         """
         n_encoder_blocks: number of encoder blocks in the architecture

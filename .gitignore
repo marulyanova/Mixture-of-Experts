@@ -1,2 +1,5 @@
 /model_utils/__pycache__
 test.py
+venv
+__pycache__/
+*.py[cod]
