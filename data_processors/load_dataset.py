@@ -31,7 +31,7 @@ def main(config_name):
                 subset2.append(record)
             else:
                 subset.append(record)
-                if i >= loaded_params.load_params.train_len+loaded_params.load_params.test_len: 
+                if len(subset)>= loaded_params.load_params.train_len+loaded_params.load_params.test_len: 
                     break
     else:
         subreddits_set = set(subreddits) 
@@ -78,8 +78,8 @@ def main(config_name):
     logger.info(f"Saved train dataset with size: {len(train_df)}")
     test_df.to_csv(loaded_params.data_params.test_data_path, index=False)
     logger.info(f"Saved test dataset with size: {len(test_df)}")
-    subset1_df.to_csv(loaded_params.data_params.subset1_path, index=False)
-    subset2_df.to_csv(loaded_params.data_params.subset2_path, index=False)
+    subset1_df.to_csv(loaded_params.data_params.subset1_path+loaded_params.data_params.subreddit1+".csv", index=False)
+    subset2_df.to_csv(loaded_params.data_params.subset2_path+loaded_params.data_params.subreddit2+".csv", index=False)
 
 if __name__ == "__main__":
     main()

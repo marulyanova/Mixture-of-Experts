@@ -14,7 +14,8 @@ data_params:
   train_data_path: "data/processed/train.csv"
   validate_data_path: "data/processed/valid.csv"
   test_data_path: "data/processed/test.csv"
-  subset1_path: "data/processed/subset1.csv"
-  subset2_path: "data/processed/subset2.csv"
+  subset1_path: "data/processed/"
+  subset2_path: "data/processed/"
+  masked_data_path: "data/masked/"
 random_state: 11
 seed: 11

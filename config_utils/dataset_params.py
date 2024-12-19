@@ -9,6 +9,7 @@ class DataParams:
     subset2_path: str
     validate_data_path: str
     test_data_path: str
+    masked_data_path: str
     subreddit1: str
     subreddit2: str
     subreddits: list
