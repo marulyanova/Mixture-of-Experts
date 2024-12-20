@@ -5,10 +5,14 @@ import marshmallow
 class DataParams:
     tokenizer_name: str
     train_data_path: str
+    subset1_path: str
+    subset2_path: str
     validate_data_path: str
     test_data_path: str
+    masked_data_path: str
     subreddit1: str
     subreddit2: str
+    subreddits: list
     mask_prob: float = field(
         default=0.10, metadata={"validate": marshmallow.validate.Range(max=1)}
     )
