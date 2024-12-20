@@ -12,7 +12,7 @@ python data_processors/load_dataset.py --config-name dataset_params.yaml
 
 ## 2. Запуск процесса маскирования датасетов сформированных на предыдущем шаге
 ```bash
-python data_processors/dataset.py --data-config dataset_params.yaml --model-config model_params.yaml
+python data_processors/dataset.py --config-dataset dataset_params.yaml --config-model model_params.yaml
 ```
 
 ## 3. Запуск обучения

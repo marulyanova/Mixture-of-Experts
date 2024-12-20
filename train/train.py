@@ -35,9 +35,12 @@ from train_utils.data import PrepareDataloader, PrepareDataset
 
 
 @click.command()
-@click.option("--config-model", type=Path, required=True)
-@click.option("--config-dataset", type=Path, required=True)
-@click.option("--config-train", type=Path, required=True)
+@click.option('--config-model', type=Path, default="model_params.yaml", 
+              show_default=True, help="Path to the model configuration file.")
+@click.option('--config-dataset', type=Path, default="dataset_params.yaml", 
+              show_default=True, help="Path to the data configuration file.")
+@click.option('--config-train', type=Path, default="train_params.yaml", 
+              show_default=True, help="Path to the train configuration file.")
 def main(config_model, config_dataset, config_train):
 
     # LOAD PARAMS

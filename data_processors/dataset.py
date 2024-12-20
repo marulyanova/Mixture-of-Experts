@@ -25,13 +25,13 @@ def load_as_hf_dataset(datapath: Path) -> Dataset:
 
 
 @click.command()
-@click.option('--data-config', type=Path, default="dataset_params.yaml", 
+@click.option('--config-dataset', type=Path, default="dataset_params.yaml", 
               show_default=True, help="Path to the data configuration file.")
-@click.option('--model-config', type=Path, default="model_params.yaml", 
+@click.option('--config-model', type=Path, default="model_params.yaml", 
               show_default=True, help="Path to the model configuration file.")
-def main(data_config,  model_config):
-    dataset_params = load_params_from_yaml(data_config, DataParamsSchema)
-    model_params = load_params_from_yaml(model_config, ModelParamsSchema)
+def main(config_dataset,  config_model):
+    dataset_params = load_params_from_yaml(config_dataset, DataParamsSchema)
+    model_params = load_params_from_yaml(config_model, ModelParamsSchema)
     
     paths = [ dataset_params.data_params.train_data_path, 
              dataset_params.data_params.test_data_path,
