@@ -24,21 +24,6 @@ class PositionwiseFeedForward(nn.Module):
         return x
 
 
-class Gate(nn.Module):
-    def __init__(self, embedding_dim, n_experts, top_k):
-        super(Gate, self).__init__()
-        self.top_k = top_k
-        self.gate = nn.Linear(embedding_dim, n_experts)
-
-    def forward(self, x):
-        gate_response = self.gate(x)
-        top_k_logits, indices = gate_response.topk(self.top_k, dim=-1)
-        zeros = torch.full_like(gate_response, float("-inf"))
-        sparse_logits = zeros.scatter(-1, indices, top_k_logits)
-        gate_output = F.softmax(sparse_logits, dim=-1)
-        return gate_output, indices
-
-
 class MoELayer(nn.Module):
     def __init__(
         self,
@@ -50,8 +35,10 @@ class MoELayer(nn.Module):
     ):
         super(MoELayer, self).__init__()
 
-        self.gate = Gate(
-            embedding_dim=embedding_dim, n_experts=n_experts, top_k=top_k_experts
+        self.gate = nn.Linear(
+            embedding_dim,
+            n_experts,
+            bias=False,
         )
 
         self.experts = nn.ModuleList(
@@ -61,34 +48,45 @@ class MoELayer(nn.Module):
             ]
         )
 
-        self.tok_k = top_k_experts
+        self.top_k = top_k_experts
 
     def forward(self, x):
 
-        gate_output, indices = self.gate(x)
-        final_output = torch.zeros_like(x)
-
-        flat_x = x.view(-1, x.size(-1))
-        flat_gating_output = gate_output.view(-1, gate_output.size(-1))
-
-        # Process each expert in parallel
+        gate_response = self.gate(x)
+        weights, selected_experts = torch.topk(gate_response, self.top_k)
+        weights = F.softmax(weights, dim=-1, dtype=torch.float).to(x.dtype)
+        out = torch.zeros_like(x)
         for i, expert in enumerate(self.experts):
-            # Create a mask for the inputs where the current expert is in top-k
-            expert_mask = (indices == i).any(dim=-1)
-            flat_mask = expert_mask.view(-1)
+            batch_idx, token_idx, topk_idx = torch.where(selected_experts == i)
+            weight = weights[batch_idx, token_idx, topk_idx, None]
+            out[batch_idx, token_idx] += weight * expert(x[batch_idx, token_idx])
 
-            if flat_mask.any():
-                expert_input = flat_x[flat_mask]
-                expert_output = expert(expert_input)
+        return out, selected_experts
 
-                # Extract and apply gating scores
-                gating_scores = flat_gating_output[flat_mask, i].unsqueeze(1)
-                weighted_output = expert_output * gating_scores
+        # gate_output, indices = self.gate(x)
+        # final_output = torch.zeros_like(x)
 
-                # Update final output additively by indexing and adding
-                final_output[expert_mask] += weighted_output.squeeze(1)
+        # flat_x = x.view(-1, x.size(-1))
+        # flat_gating_output = gate_output.view(-1, gate_output.size(-1))
 
-        return final_output, indices.squeeze(-1)
+        # # Process each expert in parallel
+        # for i, expert in enumerate(self.experts):
+        #     # Create a mask for the inputs where the current expert is in top-k
+        #     expert_mask = (indices == i).any(dim=-1)
+        #     flat_mask = expert_mask.view(-1)
+
+        #     if flat_mask.any():
+        #         expert_input = flat_x[flat_mask]
+        #         expert_output = expert(expert_input)
+
+        #         # Extract and apply gating scores
+        #         gating_scores = flat_gating_output[flat_mask, i].unsqueeze(1)
+        #         weighted_output = expert_output * gating_scores
+
+        #         # Update final output additively by indexing and adding
+        #         final_output[expert_mask] += weighted_output.squeeze(1)
+
+        # return final_output, indices.squeeze(-1)
 
         # # gates_respond = torch.stack([F.softmax(gate(x), dim=-1) for gate in self.gates])
 
