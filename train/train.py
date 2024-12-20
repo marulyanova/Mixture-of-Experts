@@ -35,13 +35,28 @@ from train_utils.data import PrepareDataloader, PrepareDataset
 
 
 @click.command()
-@click.option('--config-model', type=Path, default="model_params.yaml", 
-              show_default=True, help="Path to the model configuration file.")
-@click.option('--config-dataset', type=Path, default="dataset_params.yaml", 
-              show_default=True, help="Path to the data configuration file.")
-@click.option('--config-train', type=Path, default="train_params.yaml", 
-              show_default=True, help="Path to the train configuration file.")
-@click.option('--tag', type=str, required=True, help="One tag to mark experiment")
+@click.option(
+    "--config-model",
+    type=Path,
+    default="model_params.yaml",
+    show_default=True,
+    help="Path to the model configuration file.",
+)
+@click.option(
+    "--config-dataset",
+    type=Path,
+    default="dataset_params.yaml",
+    show_default=True,
+    help="Path to the data configuration file.",
+)
+@click.option(
+    "--config-train",
+    type=Path,
+    default="train_params.yaml",
+    show_default=True,
+    help="Path to the train configuration file.",
+)
+@click.option("--tag", type=str, required=True, help="One tag to mark experiment")
 def main(config_model, config_dataset, config_train, tag):
 
     # LOAD PARAMS
@@ -58,11 +73,30 @@ def main(config_model, config_dataset, config_train, tag):
     torch.manual_seed(train_params.random_seed)
 
     # DATASET
-    subreddit1_loaded=torch.load(loaded_params.data_params.masked_data_path + loaded_params.data_params.subreddit1+ ".pt")
-    subreddit2_loaded=torch.load(loaded_params.data_params.masked_data_path + loaded_params.data_params.subreddit2+ ".pt")
-    train_loaded = torch.load(loaded_params.data_params.masked_data_path + os.path.splitext(os.path.basename(loaded_params.data_params.train_data_path))[0]+ ".pt")
-    val_loaded = torch.load(loaded_params.data_params.masked_data_path + os.path.splitext(os.path.basename(loaded_params.data_params.test_data_path))[0]+ ".pt")
-    
+    subreddit1_loaded = torch.load(
+        loaded_params.data_params.masked_data_path
+        + loaded_params.data_params.subreddit1
+        + ".pt"
+    )
+    subreddit2_loaded = torch.load(
+        loaded_params.data_params.masked_data_path
+        + loaded_params.data_params.subreddit2
+        + ".pt"
+    )
+    train_loaded = torch.load(
+        loaded_params.data_params.masked_data_path
+        + os.path.splitext(os.path.basename(loaded_params.data_params.train_data_path))[
+            0
+        ]
+        + ".pt"
+    )
+    val_loaded = torch.load(
+        loaded_params.data_params.masked_data_path
+        + os.path.splitext(os.path.basename(loaded_params.data_params.test_data_path))[
+            0
+        ]
+        + ".pt"
+    )
 
     dataset = PrepareDataset(
         train_loaded,
@@ -130,7 +164,7 @@ def main(config_model, config_dataset, config_train, tag):
                 with accelerator.accumulate(model):
                     output, gate_respond = model(input_ids)
 
-                    print("GATE_RESPOND_SHAPE", gate_respond.shape)
+                    # print("GATE_RESPOND_SHAPE", gate_respond.shape)
 
                     # extend and reshape to nessesary form [n_layers, batch_size, max_len]
                     if epoch_gates_stats.size(0) == 0:
@@ -152,7 +186,7 @@ def main(config_model, config_dataset, config_train, tag):
                             dim=0,
                         )
 
-                    print("EPOCH_GATE_RESPOND_SHAPE", epoch_gates_stats.shape)
+                    # print("EPOCH_GATE_RESPOND_SHAPE", epoch_gates_stats.shape)
 
                     mask = input_ids == train_params.tokenizer_mask_id
                     masked_output = output[mask]
@@ -195,7 +229,7 @@ def main(config_model, config_dataset, config_train, tag):
                                 )
                                 output, gate_respond_val = model(input_ids)
 
-                                print("GATE_RESPOND_SHAPE VAL", gate_respond_val.shape)
+                                # print("GATE_RESPOND_SHAPE VAL", gate_respond_val.shape)
 
                                 if epoch_gates_stats_val.size(0) == 0:
                                     epoch_gates_stats_val = (
@@ -218,10 +252,10 @@ def main(config_model, config_dataset, config_train, tag):
                                         dim=0,
                                     )
 
-                                print(
-                                    "EPOCH_GATE_RESPOND_SHAPE VAL",
-                                    epoch_gates_stats_val.shape,
-                                )
+                                # print(
+                                #     "EPOCH_GATE_RESPOND_SHAPE VAL",
+                                #     epoch_gates_stats_val.shape,
+                                # )
 
                                 mask = input_ids == train_params.tokenizer_mask_id
                                 masked_output = output[mask]
@@ -274,12 +308,15 @@ def main(config_model, config_dataset, config_train, tag):
                     dim=0,
                 )
 
-            print(train_gates_stats.shape)
-            print(val_gates_stats.shape)
+            # print(train_gates_stats.shape)
+            # print(val_gates_stats.shape)
+
+            torch.save(
+                train_gates_stats, train_params.save_path + "/train_gates_stats.pt"
+            )
+            torch.save(val_gates_stats, train_params.save_path + "/val_gates_stats.pt")
 
     accelerator.end_training()
-
-    # TODO: add the processing of gates_respond to accelerator
 
 
 if __name__ == "__main__":

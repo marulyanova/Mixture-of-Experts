@@ -31,3 +31,8 @@ pip install aim
 ```bash
 aim up
 ```
+
+Запуск обучения с логированием эксперимента в Aim
+```bash
+python train/train.py --tag name
+```
