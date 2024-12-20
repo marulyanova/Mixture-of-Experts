@@ -58,9 +58,11 @@ def main(config_model, config_dataset, config_train, tag):
     torch.manual_seed(train_params.random_seed)
 
     # DATASET
-
-    train_loaded = torch.load(loaded_params.data_params.masked_data_path + "train.pt")
-    val_loaded = torch.load(loaded_params.data_params.masked_data_path + "test.pt")
+    subreddit1_loaded=torch.load(loaded_params.data_params.masked_data_path + loaded_params.data_params.subreddit1+ ".pt")
+    subreddit2_loaded=torch.load(loaded_params.data_params.masked_data_path + loaded_params.data_params.subreddit2+ ".pt")
+    train_loaded = torch.load(loaded_params.data_params.masked_data_path + os.path.splitext(os.path.basename(loaded_params.data_params.train_data_path))[0]+ ".pt")
+    val_loaded = torch.load(loaded_params.data_params.masked_data_path + os.path.splitext(os.path.basename(loaded_params.data_params.test_data_path))[0]+ ".pt")
+    
 
     dataset = PrepareDataset(
         train_loaded,
