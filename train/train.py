@@ -41,7 +41,8 @@ from train_utils.data import PrepareDataloader, PrepareDataset
               show_default=True, help="Path to the data configuration file.")
 @click.option('--config-train', type=Path, default="train_params.yaml", 
               show_default=True, help="Path to the train configuration file.")
-def main(config_model, config_dataset, config_train):
+@click.option('--tag', type=str, required=True, help="One tag to mark experiment")
+def main(config_model, config_dataset, config_train, tag):
 
     # LOAD PARAMS
 
@@ -78,6 +79,7 @@ def main(config_model, config_dataset, config_train):
     accelerator.init_trackers(
         train_params.experiment_name, config=json.loads(train_params.model_dump_json())
     )
+    accelerator.get_tracker("aim").writer.add_tag(tag)
 
     model = MoETransformerEncoder(**model_params.__dict__)
     optimizer = AdamW(

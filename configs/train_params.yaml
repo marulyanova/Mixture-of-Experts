@@ -1,5 +1,5 @@
 batch_size: 16
-n_epochs: 3 # TODO: change the number of epochs
+n_epochs: 1 # TODO: change the number of epochs
 learning_rate: 0.001
 random_seed: 11
 gradient_accumulation_steps: 1 # TODO: change gradient_accumulation_steps
