@@ -15,6 +15,9 @@ from torch.utils.data import DataLoader
 from accelerate import Accelerator
 from transformers import AdamW
 import transformers
+import torch.nn.functional as F
+from torchmetrics import Accuracy
+
 
 import click
 from pathlib import Path
@@ -86,9 +89,92 @@ def main(config_name):
     )
     scheduler = accelerator.prepare(scheduler)
 
-    # process of training
+    # PROCESS OF TRAINING
 
-    return
+    gates_stats = []
+
+    with tqdm(desc="Training", total=total_steps) as pbar:
+        for epoch in range(train_params.epochs):
+            for batch_i, batch in enumerate(train_dataloader):
+
+                current_step = batch_i + epoch * len(train_dataloader)
+                input_ids, attention_mask, labels = (
+                    batch["input_ids"],
+                    batch["attention_mask"],
+                    batch["labels"],
+                )
+
+                with accelerator.accumulate(model):
+                    output, gate_respond = model(input_ids)
+
+                    gates_stats.extend(gate_respond.flatten().tolist())
+                    mask = input_ids == train_params["tokenizer_mask_id"]
+                    masked_output = output[mask]
+                    masked_labels = labels[mask]
+
+                    loss = F.cross_entropy(masked_output, masked_labels)
+                    _, predicted = torch.max(masked_output, dim=-1)
+                    correct_predictions = (predicted == masked_labels).sum().item()
+                    total_predictions = masked_labels.size(0)
+                    accuracy = (
+                        correct_predictions / total_predictions
+                        if total_predictions > 0
+                        else 0.0
+                    )
+
+                    accelerator.log({"train_loss": loss.item()}, step=current_step + 1)
+                    accelerator.log({"train_accuracy": accuracy}, step=current_step + 1)
+                    accelerator.backward(loss)
+                    optimizer.step()
+                    scheduler.step()
+                    optimizer.zero_grad()
+                    pbar.update(1)
+
+                if (
+                    current_step + 1
+                ) % train_params.eval_steps == 0 or current_step + 1 == total_steps:
+                    model.eval()
+                    with tqdm(desc="Eval", total=len(val_dataloader)) as eval_pbar:
+                        with torch.no_grad():
+                            for eval_batch in val_dataloader:
+                                input_ids, attention_mask, labels = (
+                                    eval_batch["input_ids"],
+                                    eval_batch["attention_mask"],
+                                    eval_batch["labels"],
+                                )
+                                output, gates_respond = model(input_ids)
+                                mask = input_ids == train_params["tokenizer_mask_id"]
+                                masked_output = output[mask]
+                                masked_labels = labels[mask]
+
+                                loss = F.cross_entropy(masked_output, masked_labels)
+                                _, predicted = torch.max(masked_output, dim=-1)
+                                correct_predictions = (
+                                    (predicted == masked_labels).sum().item()
+                                )
+                                total_predictions = masked_labels.size(0)
+                                accuracy = (
+                                    correct_predictions / total_predictions
+                                    if total_predictions > 0
+                                    else 0.0
+                                )
+                                eval_pbar.update(1)
+                                accelerator.log(
+                                    {"accuracy eval": accuracy}, step=current_step + 1
+                                )
+                    model.train()
+
+                if (
+                    current_step + 1
+                ) % model_params.save_steps == 0 or current_step + 1 == total_steps:
+                    accelerator.wait_for_everyone()
+                    accelerator.save_model(
+                        model, train_params.save_path / f"step_{current_step + 1}"
+                    )
+
+    accelerator.end_training()
+
+    # TODO: add the processing of gates_respond
 
 
 if __name__ == "__main__":
