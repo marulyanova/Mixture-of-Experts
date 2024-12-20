@@ -9,4 +9,4 @@ warmup_proportion: 0.1
 tokenizer_mask_id: 103
 eval_steps: 20 # TODO: change eval_steps
 save_steps: 1000 # TODO: change save_steps
-save_path: # TODO: add save_path
+save_path: . # TODO: add save_path
