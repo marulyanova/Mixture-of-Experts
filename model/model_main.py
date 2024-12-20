@@ -122,6 +122,7 @@ class MoETransformerEncoder(nn.Module):
         )
 
         self.lm_head = nn.Linear(embedding_dim, vocab_size)
+        self.device = device
 
     def forward(self, x):
 
@@ -137,7 +138,7 @@ class MoETransformerEncoder(nn.Module):
 
         block_iteration = 0
         input_iteration = input
-        gate_respond = torch.tensor([])
+        gate_respond = torch.tensor([]).to(self.device)
         while block_iteration < len(self.moe_transformer):
             input_iteration, gate_respond_iteration = self.moe_transformer[
                 block_iteration

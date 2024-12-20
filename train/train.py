@@ -1,6 +1,10 @@
 import os
 import sys
 
+import warnings
+
+warnings.filterwarnings("ignore")
+
 sys.path.append(os.path.abspath(os.path.join(__file__, "../../")))
 
 import json
@@ -18,7 +22,6 @@ from accelerate import Accelerator
 from accelerate.utils import set_seed, tqdm
 from datasets import Dataset, DatasetDict
 from torch.utils.data import DataLoader
-from torchmetrics import Accuracy
 from transformers import AdamW
 
 from config_utils.load_config import (
@@ -28,39 +31,39 @@ from config_utils.load_config import (
     load_params_from_yaml,
 )
 from model.model_main import MoETransformerEncoder
-from train.train_utils.data import PrepareDataloader, PrepareDataset
+from train_utils.data import PrepareDataloader, PrepareDataset
 
 
 @click.command()
-@click.option("--config-name", type=Path, required=True)
-def main(config_name):
+@click.option("--config-model", type=Path, required=True)
+@click.option("--config-dataset", type=Path, required=True)
+@click.option("--config-train", type=Path, required=True)
+def main(config_model, config_dataset, config_train):
 
     # LOAD PARAMS
 
-    model_params = load_params_from_yaml(config_name, ModelParamsSchema)
-    loaded_params = load_params_from_yaml("dataset_params.yaml", DataParamsSchema)
-    train_params = load_params_from_yaml("train_params.yaml", TrainParamsSchema)
+    model_params = load_params_from_yaml(config_model, ModelParamsSchema)
+    loaded_params = load_params_from_yaml(config_dataset, DataParamsSchema)
+    train_params = load_params_from_yaml(config_train, TrainParamsSchema)
 
     # ВОСПРОИЗВОДИМОСТЬ ЭКСПЕРИМЕНТОВ
 
-    set_seed(model_params.random_seed)
-    torch.cuda.manual_seed(model_params.random_seed)
-    np.random.seed(model_params.random_seed)
-    torch.manual_seed(model_params.random_seed)
+    set_seed(train_params.random_seed)
+    torch.cuda.manual_seed(train_params.random_seed)
+    np.random.seed(train_params.random_seed)
+    torch.manual_seed(train_params.random_seed)
 
     # DATASET
 
-    train_loaded, test_loaded = torch.load(loaded_params.data_params.masked_data_path)
+    train_loaded = torch.load(loaded_params.data_params.masked_data_path + "train.pt")
+    val_loaded = torch.load(loaded_params.data_params.masked_data_path + "test.pt")
 
     dataset = PrepareDataset(
         train_loaded,
-        test_loaded,
-        loaded_params.load_params.valid_len / loaded_params.load_params.train_len,
+        val_loaded,
     )
 
-    train_dataloader, val_dataloader, test_dataloader = PrepareDataloader(
-        dataset, train_params
-    )
+    train_dataloader, val_dataloader = PrepareDataloader(dataset, train_params)
 
     # ACCELERATOR
 
@@ -86,26 +89,30 @@ def main(config_name):
         num_training_steps=total_steps,
     )
 
-    model, optimizer, train_dataloader, val_dataloader, test_dataloader, scheduler = (
-        accelerator.prepare(
-            model,
-            optimizer,
-            train_dataloader,
-            val_dataloader,
-            test_dataloader,
-            scheduler,
-        )
+    model, optimizer, train_dataloader, val_dataloader, scheduler = accelerator.prepare(
+        model,
+        optimizer,
+        train_dataloader,
+        val_dataloader,
+        scheduler,
     )
 
     # PROCESS OF TRAINING
 
-    train_gates_stats = torch.tensor([])  # [n_epochs, n_layers, batch_size, max_len]
-    val_gates_stats = torch.tensor([])  # [хз что, n_layers, batch_size, max_len]
+    # [n_epochs, n_layers, batch_size, max_len]
+    train_gates_stats = torch.tensor([]).to(model_params.device)
+
+    # [хз что, n_layers, batch_size, max_len]
+    val_gates_stats = torch.tensor([]).to(model_params.device)
 
     with tqdm(desc="Training", total=total_steps) as pbar:
-        for epoch in range(train_params.epochs):
+        for epoch in range(train_params.n_epochs):
+
+            # [n_layers, batch_size, max_len]
+            epoch_gates_stats = torch.tensor([]).to(model_params.device)
+
             for batch_i, batch in enumerate(train_dataloader):
-                epoch_gates_stats = torch.tensor([])  # [n_layers, batch_size, max_len]
+
                 current_step = batch_i + epoch * len(train_dataloader)
                 input_ids, attention_mask, labels = (
                     batch["input_ids"],
@@ -116,13 +123,31 @@ def main(config_name):
                 with accelerator.accumulate(model):
                     output, gate_respond = model(input_ids)
 
+                    print("GATE_RESPOND_SHAPE", gate_respond.shape)
+
                     # extend and reshape to nessesary form [n_layers, batch_size, max_len]
-                    epoch_gates_stats.extend(gate_respond.flatten()).reshape(
-                        model_params.n_encoder_blocks,
-                        train_params.batch_size,
-                        model_params.seq_len,
-                    )
-                    mask = input_ids == train_params["tokenizer_mask_id"]
+                    if epoch_gates_stats.size(0) == 0:
+                        epoch_gates_stats = gate_respond.flatten().reshape(
+                            model_params.n_encoder_blocks,
+                            train_params.batch_size,
+                            model_params.seq_len,
+                        )
+                    else:
+                        epoch_gates_stats = torch.cat(
+                            (
+                                epoch_gates_stats,
+                                gate_respond.flatten().reshape(
+                                    model_params.n_encoder_blocks,
+                                    train_params.batch_size,
+                                    model_params.seq_len,
+                                ),
+                            ),
+                            dim=0,
+                        )
+
+                    print("EPOCH_GATE_RESPOND_SHAPE", epoch_gates_stats.shape)
+
+                    mask = input_ids == train_params.tokenizer_mask_id
                     masked_output = output[mask]
                     masked_labels = labels[mask]
 
@@ -153,7 +178,7 @@ def main(config_name):
                 ) % train_params.eval_steps == 0 or current_step + 1 == total_steps:
                     model.eval()
                     with tqdm(desc="Eval", total=len(val_dataloader)) as eval_pbar:
-                        epoch_gates_stats_val = torch.tensor([])
+                        epoch_gates_stats_val = torch.tensor([]).to(model_params.device)
                         with torch.no_grad():
                             for eval_batch in val_dataloader:
                                 input_ids, attention_mask, labels = (
@@ -161,17 +186,37 @@ def main(config_name):
                                     eval_batch["attention_mask"],
                                     eval_batch["labels"],
                                 )
-                                output, gates_respond_val = model(input_ids)
+                                output, gate_respond_val = model(input_ids)
 
-                                epoch_gates_stats_val.extend(
-                                    gates_respond_val.flatten()
-                                ).reshape(
-                                    model_params.n_encoder_blocks,
-                                    train_params.batch_size,
-                                    model_params.seq_len,
+                                print("GATE_RESPOND_SHAPE VAL", gate_respond_val.shape)
+
+                                if epoch_gates_stats_val.size(0) == 0:
+                                    epoch_gates_stats_val = (
+                                        gate_respond_val.flatten().reshape(
+                                            model_params.n_encoder_blocks,
+                                            train_params.batch_size,
+                                            model_params.seq_len,
+                                        )
+                                    )
+                                else:
+                                    epoch_gates_stats_val = torch.cat(
+                                        (
+                                            epoch_gates_stats_val,
+                                            gate_respond_val.flatten().reshape(
+                                                model_params.n_encoder_blocks,
+                                                train_params.batch_size,
+                                                model_params.seq_len,
+                                            ),
+                                        ),
+                                        dim=0,
+                                    )
+
+                                print(
+                                    "EPOCH_GATE_RESPOND_SHAPE VAL",
+                                    epoch_gates_stats_val.shape,
                                 )
 
-                                mask = input_ids == train_params["tokenizer_mask_id"]
+                                mask = input_ids == train_params.tokenizer_mask_id
                                 masked_output = output[mask]
                                 masked_labels = labels[mask]
 
@@ -194,18 +239,40 @@ def main(config_name):
 
                 if (
                     current_step + 1
-                ) % model_params.save_steps == 0 or current_step + 1 == total_steps:
+                ) % train_params.save_steps == 0 or current_step + 1 == total_steps:
                     accelerator.wait_for_everyone()
                     accelerator.save_model(
                         model, train_params.save_path / f"step_{current_step + 1}"
                     )
 
-            train_gates_stats.extend(epoch_gates_stats)
-            val_gates_stats.extend(epoch_gates_stats_val)
+            if train_gates_stats.size(0) == 0:
+                train_gates_stats = epoch_gates_stats
+            else:
+                train_gates_stats = torch.cat(
+                    (
+                        train_gates_stats,
+                        epoch_gates_stats,
+                    ),
+                    dim=0,
+                )
+
+            if val_gates_stats.size(0) == 0:
+                val_gates_stats = epoch_gates_stats_val
+            else:
+                val_gates_stats = torch.cat(
+                    (
+                        val_gates_stats,
+                        epoch_gates_stats_val,
+                    ),
+                    dim=0,
+                )
+
+            print(train_gates_stats.shape)
+            print(val_gates_stats.shape)
 
     accelerator.end_training()
 
-    # TODO: add the processing of gates_respond
+    # TODO: add the processing of gates_respond to accelerator
 
 
 if __name__ == "__main__":

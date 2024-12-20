@@ -15,4 +15,3 @@ class ModelParams:
     head_dim: int
     moe_dim: int
     device: str
-    random_seed: int

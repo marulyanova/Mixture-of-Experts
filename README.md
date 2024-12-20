@@ -15,7 +15,6 @@ python data_processors/load_dataset.py --config-name dataset_params.yaml
 python data_processors/dataset.py --data-config dataset_params.yaml --model-config model_params.yaml
 ```
 
-## 2. Запуск обучения
+## 3. Запуск обучения
 ```bash
-python train/train.py --config-name model_params.yaml
-```
+python train/train.py --config-model model_params.yaml --config-dataset dataset_params.yaml --config-train train_params.yaml
