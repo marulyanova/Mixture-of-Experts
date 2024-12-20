@@ -8,25 +8,38 @@ from datasets import Dataset
 from transformers import BertTokenizerFast
 import pandas as pd
 
-from config_utils.load_config import load_params_from_yaml, DataParamsSchema
+from loguru import logger
 
-from data_processors.load_dataset import load_dataset
+from config_utils.load_config import load_params_from_yaml, DataParamsSchema, ModelParamsSchema
+
+from data_processors.mask_dataset import make_mask
 
 def load_as_hf_dataset(datapath: Path) -> Dataset:
-    #TODO if file does not exist load with load_dataset func
-    df = pd.read_csv(datapath)
-    dataset = Dataset.from_pandas(df[["title", "body", "subreddit"]])
+    try:
+        df = pd.read_csv(datapath)
+        dataset = Dataset.from_pandas(df[["title", "body", "subreddit"]])
+    except:
+        logger.error(f"Cannot load file: {datapath}")
+        exit()
     return dataset
 
 
 @click.command()
-@click.option('--config-name', type=Path, required=True)
-def main(config_name):
-    dataset_params = load_params_from_yaml(config_name, DataParamsSchema)
-    dataset = load_as_hf_dataset(dataset_params.load_params.raw_data_path)
-    print(dataset[0])
+@click.option('--data-config', type=Path, default="dataset_params.yaml", 
+              show_default=True, help="Path to the data configuration file.")
+@click.option('--model-config', type=Path, default="model_params.yaml", 
+              show_default=True, help="Path to the model configuration file.")
+def main(data_config,  model_config):
+    dataset_params = load_params_from_yaml(data_config, DataParamsSchema)
+    model_params = load_params_from_yaml(model_config, ModelParamsSchema)
     
-    return 
+    paths = [ dataset_params.data_params.train_data_path, 
+             dataset_params.data_params.test_data_path,
+             dataset_params.data_params.subset1_path+dataset_params.data_params.subreddit1+".csv", 
+             dataset_params.data_params.subset2_path+dataset_params.data_params.subreddit2+".csv"]
+    for i in paths:
+        dataset = load_as_hf_dataset(i)
+        make_mask(model_params.seq_len, dataset, dataset_params, os.path.splitext(os.path.basename(i))[0])
 
 if __name__=="__main__":
     main()

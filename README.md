@@ -3,13 +3,19 @@
 
 
 # Запуск эскпериментов
+* для получения пояснений к параметрам введите опцию --help
 
 ## 1. Запуск формирования датасета
 ```bash
-python3 dataset/dataset.py  --config-name train_dataset_params.yaml
+python data_processors/load_dataset.py --config-name dataset_params.yaml
+```
+
+## 2. Запуск процесса маскирования датасетов сформированных на предыдущем шаге
+```bash
+python data_processors/dataset.py --data-config dataset_params.yaml --model-config model_params.yaml
 ```
 
 ## 2. Запуск обучения
 ```bash
-python3 train/train.py  --config-name model_params.yaml
+python train/train.py --config-name model_params.yaml
 ```

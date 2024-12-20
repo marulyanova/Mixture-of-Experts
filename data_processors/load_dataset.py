@@ -1,21 +1,21 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(__file__, "../../")))
+
 from datasets import load_dataset
 import pandas as pd
 
-from config_utils.dataset_params import LoadParams
 from config_utils.load_config import load_params_from_yaml, DataParamsSchema
 import click
 from pathlib import Path
 from loguru import logger
 from collections import defaultdict
-import numpy as np
 from sklearn.model_selection import train_test_split
 
 
 @click.command()
-@click.option('--config-name', type=Path, required=True)
+@click.option('--config-name', type=Path, default="dataset_params.yaml", 
+              show_default=True, help="Path to the data configuration file.")
 def main(config_name):
     loaded_params = load_params_from_yaml(config_name, DataParamsSchema)
     subreddits=loaded_params.data_params.subreddits
