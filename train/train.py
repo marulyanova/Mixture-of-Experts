@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(__file__, "../../")))
 import json
 from pathlib import Path
 from typing import Dict
+import random
 
 import click
 import datasets
@@ -71,6 +72,7 @@ def main(config_model, config_dataset, config_train, tag):
     torch.cuda.manual_seed(train_params.random_seed)
     np.random.seed(train_params.random_seed)
     torch.manual_seed(train_params.random_seed)
+    random.seed(train_params.random_seed)
 
     # DATASET
     subreddit1_loaded = torch.load(
