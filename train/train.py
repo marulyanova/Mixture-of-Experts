@@ -73,6 +73,7 @@ def main(config_model, config_dataset, config_train, tag):
     np.random.seed(train_params.random_seed)
     torch.manual_seed(train_params.random_seed)
     random.seed(train_params.random_seed)
+    torch.backends.cudnn.deterministic = True
 
     # DATASET
     subreddit1_loaded = torch.load(
