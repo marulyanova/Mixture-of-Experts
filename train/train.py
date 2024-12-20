@@ -274,7 +274,12 @@ def main(config_model, config_dataset, config_train, tag):
                                 )
                                 eval_pbar.update(1)
                                 accelerator.log(
-                                    {"accuracy eval": accuracy}, step=current_step + 1
+                                    {"accuracy_batch_eval": accuracy},
+                                    step=current_step + 1,
+                                )
+
+                                accelerator.log(
+                                    {"loss_batch_eval": loss}, step=current_step + 1
                                 )
                     model.train()
 
