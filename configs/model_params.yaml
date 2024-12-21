@@ -1,6 +1,6 @@
 vocab_size: 30522 
 embedding_dim: 256
-seq_len: 128
+seq_len: 64
 num_head: 8
 n_experts: 4
 n_gates: 1
