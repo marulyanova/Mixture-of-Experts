@@ -45,3 +45,16 @@ aim up
 ```bash
 python train/train.py --tag name
 ```
+
+# Результаты экспериментов
+
+### Обученные модели
+1. seg_len=64 mask_prob=0.15 - розовая (без тега)
+2. seg_len=64 mask_prob=0.05 - фиолетовая (тег kaggle)
+3. seg_len=128 mask_prob=0.1 - зеленая (тег kaggle-128-0.1)
+4. seg_len=128 mask_prob=0.3 - темно-синяя (тег kaggle-128-0.3)
+
+seg_len - максимальная длина последовательности  
+mask_prob - процент замаскированных токенов в одной последовательности длины seg_len
+
+<img src="images/aim.png" width=1000>
