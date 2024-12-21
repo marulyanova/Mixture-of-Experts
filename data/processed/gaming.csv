@@ -1816,43 +1816,6 @@ Do what I said in the first paragraph, copying the first board graphic above in 
 We should get a huge branching of possible game states as we go, collapsing Chess' wave function along the way. Of course, you can look for a particular username to reply to your last state to keep a game going between two people, but anyone is free to fork any game at any point, creating a new instance of the outcome of that game from that point by simply replying to it with a next move.
 
 I think text comments embedded alongside gameplay (questions to the players, e.g.) will be alright, though they'll space out the moves a bit. Again, as I said, I just want to see what it looks like to watch games unfold in this way on reddit.",gaming
-"Reddit-comment-chess group tournament concept: Let's all play a giant, continuous game of Unicode chess in the comments to this post. Details inside...","I'm curious to see how this will turn out, and if anyone is even interested. I've been curious to see how a board game could work on reddit, and this is a first step. Here's the game board, which you can copy/paste into your replies to comments, rearranging the pieces to match the previous state, plus the change for your move:
-
-    ┌|─|─|─|─|─|─|─|─|┐
-    -|-|-|-|-|-|-|-|-|-
-    │|♜|♞|♝|♛|♚|♝|♞|♜|│
-    │|♟|♟|♟|♟|♟|♟|♟|♟|│
-    │| | | | | | | | |│
-    │| | | | | | | | |│
-    │| | | | | | | | |│
-    │| | | | | | | | |│
-    │|♙|♙|♙|♙|♙|♙|♙|♙|│
-    │|♖|♘|♗|♕|♔|♗|♘|♖|│
-    └|─|─|─|─|─|─|─|─|┘
-
-Reddit's new Discount table syntax will handle turning it into a graphical board, like this:
-
-┌|─|─|─|─|─|─|─|─|┐
--|-|-|-|-|-|-|-|-|-
-│|♜|♞|♝|♛|♚|♝|♞|♜|│
-│|♟|♟|♟|♟|♟|♟|♟|♟|│
-│| | | | | | | | |│
-│| | | | | | | | |│
-│| | | | | | | | |│
-│| | | | | | | | |│
-│|♙|♙|♙|♙|♙|♙|♙|♙|│
-│|♖|♘|♗|♕|♔|♗|♘|♖|│
-└|─|─|─|─|─|─|─|─|┘
-
-The second row of dashes and pipes is what triggers the table markdown, and the extra pad of cells framing the outside is both for decoration, and to hold height on the entirely empty rows, especially at the beginning, otherwise they collapse.
-
-**To play:**
-
-Do what I said in the first paragraph, copying the first board graphic above in its entirety, and moving the pieces around to match whatever previous state you're starting from with the addition of your move. Here's the part I'm interested in: **Anyone can reply to any board state** with a new state, but no one is guaranteed to reply to any in particular, so any game may stall out.
-
-We should get a huge branching of possible game states as we go, collapsing Chess' wave function along the way. Of course, you can look for a particular username to reply to your last state to keep a game going between two people, but anyone is free to fork any game at any point, creating a new instance of the outcome of that game from that point by simply replying to it with a next move.
-
-I think text comments embedded alongside gameplay (questions to the players, e.g.) will be alright, though they'll space out the moves a bit. Again, as I said, I just want to see what it looks like to watch games unfold in this way on reddit.",gaming
 Why do people think that Battlefield: Bad Company 2 will be what MW2 should have been?,"Let's not forget that EA was the spearheader in ""pay more to win"" business strategies, especially in the Battlefield series, where players would buy add-ons to get overpowered weapons (as we all know EA tried to pull the same crap again in BC1). EA's rep for ripping people off has always been known, so why are we ignoring that right now? That being said, while the dedicated servers are nice, I don't feel like BF: BC2 will be the FPS messiah that the intense MW2 hating gamers are hoping for.",gaming
 What are some videos about games and gaming?,"Hey guys and dolls.  I'm having a games night (mostly board gaming; Settlers, Ticket to Ride, Once Upon a Time etc), and would like to show a few games-related shorts.  
 
@@ -4719,7 +4682,6 @@ And below all of that is a black strip, which reveals dots in some sort of patte
 Steam Web APIs now include OpenId,"
 
 This isn't getting a lot of attention, but it may be very important in the near future.  As Facebook and Twitter are constantly being integrated with everything they can stick their API in, Steam is the natural choice for game developers.  There's something to be said to keeping your personal and your gaming life somewhat segregated.",gaming
-If I have GTA IV and Just Cause 2 do I need Saint's Row 2?,I was considering picking it up in the steam sale but it seems that the space occupied by Saint Row 2 is sort of filled by GTA IV on the more realistic side and Just Cause 2 on the crazy side. What do you think?,gaming
 What are some games that you think are wholly underrated?,"For me, it's the minority report game for the ps2, xbox and gamecube.
 I had hours of fun with this game.  The protagonist was unique and interesting (not tom cruise) the fighting was a blast, and it was one of the first games to use ragdoll physics (and they took FULL advantage of that technology)
 
@@ -6300,3 +6262,15 @@ There is an area where I think games have really become art: tabletop RPGs. Not 
 And, once that kind of thing is prevalent, THEN you can tell Ebert to fuck off. 
 
 tl;dr: Ebert isn't saying art becomes non-art when put into a video game. He's saying the game part isn't art. A chess set is sculpture which is definitely art, but the rules of chess are not. A cereal box may have art on the front, that doesn't make cereal art.",gaming
+What is your favorite music from any video game?,"Could be classic or something more recent.
+
+I'm a fan of just about anything from Sonic (1,2, and Sonic and Knuckles).
+Also thought Final Fantasy X had a great soundtrack.
+
+Examples:  (Starlight Zone - Sonic)
+ (To Zanarkand - FFX)",gaming
+"Damnit, can someone help me remember the name of this game?","I just saw the post about The Dig (I loved that game when I was a kid), and it reminded me of another game I had around the same time.  In this game, you were stuck on a spaceship of some sort that you were trying to fix up.  It was a first person view, kind of similar to Myst I guess.  I remember getting to the end, and encountering some sort of crippling bug that kept me from finishing the game.  I would love to hunt this game down and finally finish it, but for the life of me I cannot remember the name or much else about it.
+
+edit: The main screen that I remember had a bunch of tubes that you needed to repair and fill up with some sort of green slime, which I think restored power to a part of the ship. Also you had some equipment like a multitool and a device that detected radiation.
+
+edit #2: dinx2582 found it, the game is Mission Critical, released in 1996 by Legend Entertainment.",gaming
