@@ -200,8 +200,8 @@ def main(config_model, config_dataset, config_train, tag):
                     accelerator.log(
                         {"train_batch_accuracy": accuracy}, step=current_step + 1
                     )
-                    logger.info(f"train_batch_loss: {loss.item()}")
-                    logger.info(f"train_batch_accuracy: {accuracy}")
+                    # logger.info(f"train_batch_loss: {loss.item()}")
+                    # logger.info(f"train_batch_accuracy: {accuracy}")
                     accelerator.backward(loss)
                     optimizer.step()
                     scheduler.step()
