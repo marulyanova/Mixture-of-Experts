@@ -49,7 +49,9 @@ def main(config_name):
                         subset.append(record)
                         subreddit_counts[subreddit] += 1
                         print(len(subset))
-                if len(subset) >= loaded_params.load_params.train_len+loaded_params.load_params.test_len: 
+            if (len(subset) >= loaded_params.load_params.train_len+loaded_params.load_params.test_len 
+                and len(subset2)>=loaded_params.load_params.valid_len 
+                and len(subset1)>=loaded_params.load_params.valid_len):
                     break
     labels = [record['subreddit'] for record in subset]
     if len(subreddits)==0:
