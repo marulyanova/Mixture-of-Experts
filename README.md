@@ -19,7 +19,7 @@
 
 <img src="images/topk.png" width=600>  
 
-[Guide for mixture of experts](hhttps://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts#footnote-3-148217245)
+[Guide for mixture of experts](https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts#footnote-3-148217245)
 
 
 
