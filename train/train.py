@@ -152,7 +152,7 @@ def main(config_model, config_dataset, config_train, tag):
     # [хз что, n_layers, batch_size, max_len]
     val_gates_stats = torch.tensor([]).to(model_params.device)
 
-    with tqdm(desc="Training", total=total_steps) as pbar:
+    with tqdm(desc="Training", total=total_steps, dynamic_ncols=True) as pbar:
         for epoch in range(train_params.n_epochs):
 
             # [n_layers, batch_size, max_len]
@@ -224,7 +224,7 @@ def main(config_model, config_dataset, config_train, tag):
                     current_step + 1
                 ) % train_params.eval_steps == 0 or current_step + 1 == total_steps:
                     model.eval()
-                    with tqdm(desc="Eval", total=len(val_dataloader)) as eval_pbar:
+                    with tqdm(desc="Eval", total=len(val_dataloader), dynamic_ncols=True) as eval_pbar:
                         epoch_gates_stats_val = torch.tensor([]).to(model_params.device)
                         with torch.no_grad():
                             for eval_batch in val_dataloader:
