@@ -66,6 +66,8 @@ def main(config_model, config_dataset, config_train, tag):
     loaded_params = load_params_from_yaml(config_dataset, DataParamsSchema)
     train_params = load_params_from_yaml(config_train, TrainParamsSchema)
 
+    os.makedirs(train_params.save_path, exist_ok=True)
+
     # ВОСПРОИЗВОДИМОСТЬ ЭКСПЕРИМЕНТОВ
 
     set_seed(train_params.random_seed)
@@ -321,13 +323,22 @@ def main(config_model, config_dataset, config_train, tag):
 
             # print(train_gates_stats.shape)
             # print(val_gates_stats.shape)
-
+ 
             torch.save(
-                train_gates_stats, train_params.save_path + "/train_gates_stats.pt"
+                train_gates_stats, 
+                Path(train_params.save_path) / train_params.train_gatestats_filename
             )
-            torch.save(val_gates_stats, train_params.save_path + "/val_gates_stats.pt")
+            torch.save(
+                val_gates_stats, 
+                Path(train_params.save_path) / train_params.val_gatestats_filename
+            )
 
     accelerator.end_training()
+
+    torch.save(
+        model.state_dict(), 
+        Path(train_params.save_path) / train_params.model_filename
+    )
 
 
 if __name__ == "__main__":

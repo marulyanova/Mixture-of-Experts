@@ -16,6 +16,9 @@ class TrainParams:
     save_steps: int
     save_path: str
     random_seed: int
+    model_filename: str
+    train_gatestats_filename: str
+    val_gatestats_filename: str
 
     def model_dump_json(self) -> str:
         """Сериализует объект в JSON строку."""
