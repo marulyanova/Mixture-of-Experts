@@ -9,7 +9,7 @@ data_params:
   subreddit2: 'gaming'
   subreddits: []
   #['music', 'gaming','AskReddit', 'programming', 'science', 'politics', 'apple', 'books', 'movies', 'trees', 'reddit.com', 'Pets', 'guns', 'IAmA', 'self']
-  mask_prob: 0.15
+  mask_prob: 0.3
   tokenizer_name: "bert-base-uncased"
   train_data_path: "data/processed/train.csv"
   validate_data_path: "data/processed/valid.csv"
