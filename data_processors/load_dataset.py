@@ -23,37 +23,50 @@ def main(config_name):
     subset = []
     subset1 = []
     subset2 = []
+    unique_bodies = set()
     if len(subreddits)==0:
         for i, record in enumerate(dataset):
-            if record['subreddit']==loaded_params.data_params.subreddit1 and len(subset1)<loaded_params.load_params.valid_len:
-                subset1.append(record)
-            elif record['subreddit']==loaded_params.data_params.subreddit2 and len(subset2)<loaded_params.load_params.valid_len:
-                subset2.append(record)
-            else:
-                subset.append(record)
-                if len(subset)>= loaded_params.load_params.train_len+loaded_params.load_params.test_len: 
-                    break
+            if record['body'] not in unique_bodies:
+                if record['subreddit']==loaded_params.data_params.subreddit1 and len(subset1)<loaded_params.load_params.valid_len:
+                    subset1.append(record)
+                    unique_bodies.add(record['body'])
+                elif record['subreddit']==loaded_params.data_params.subreddit2 and len(subset2)<loaded_params.load_params.valid_len:
+                    subset2.append(record)
+                    unique_bodies.add(record['body'])
+                elif len(subset) < loaded_params.load_params.train_len+loaded_params.load_params.test_len:
+                    subset.append(record)
+                    unique_bodies.add(record['body'])
+                if len(subset)>= loaded_params.load_params.train_len+loaded_params.load_params.test_len and len(subset2)>=loaded_params.load_params.valid_len and len(subset1)>=loaded_params.load_params.valid_len: 
+                        break
     else:
         subreddits_set = set(subreddits) 
         target_count = (loaded_params.load_params.train_len+loaded_params.load_params.test_len) // len(subreddits) 
         subreddit_counts = defaultdict(int)
         for record in dataset:
-            if record['subreddit']==loaded_params.data_params.subreddit1 and len(subset1)<loaded_params.load_params.valid_len:
-                subset1.append(record)
-            elif record['subreddit']==loaded_params.data_params.subreddit2 and len(subset2)<loaded_params.load_params.valid_len:
-                subset2.append(record)
-            else:
-                subreddit = record['subreddit']
-                if subreddit in subreddits_set:
-                    if subreddit_counts[subreddit] < target_count:
-                        subset.append(record)
-                        subreddit_counts[subreddit] += 1
-                        print(len(subset))
-            if (len(subset) >= loaded_params.load_params.train_len+loaded_params.load_params.test_len 
-                and len(subset2)>=loaded_params.load_params.valid_len 
-                and len(subset1)>=loaded_params.load_params.valid_len):
-                    break
+            if record['body'] not in unique_bodies:
+                if record['subreddit']==loaded_params.data_params.subreddit1 and len(subset1)<loaded_params.load_params.valid_len:
+                    subset1.append(record)
+                    unique_bodies.add(record['body'])
+                elif record['subreddit']==loaded_params.data_params.subreddit2 and len(subset2)<loaded_params.load_params.valid_len:
+                    subset2.append(record)
+                    unique_bodies.add(record['body'])
+                else:
+                    subreddit = record['subreddit']
+                    if subreddit in subreddits_set:
+                        if subreddit_counts[subreddit] < target_count:
+                            subset.append(record)
+                            print(len(subset))
+                            unique_bodies.add(record['body'])
+                            subreddit_counts[subreddit] += 1
+                if len(subset) >= loaded_params.load_params.train_len+loaded_params.load_params.test_len and len(subset2)>=loaded_params.load_params.valid_len and len(subset1)>=loaded_params.load_params.valid_len: 
+                        break
     labels = [record['subreddit'] for record in subset]
+    bodies=[record['body'] for record in subset]
+    unique_items = set(bodies)
+    if len(subset) == len(unique_items):
+        print("Все строки уникальны.")
+    else:
+        print("Есть дубликаты.")
     if len(subreddits)==0:
         train_indices, test_indices = train_test_split(
         range(len(subset)), 
@@ -81,8 +94,9 @@ def main(config_name):
     test_df.to_csv(loaded_params.data_params.test_data_path, index=False)
     logger.info(f"Saved test dataset with size: {len(test_df)}")
     subset1_df.to_csv(loaded_params.data_params.subset1_path+loaded_params.data_params.subreddit1+".csv", index=False)
+    logger.info(f"Saved {loaded_params.data_params.subset1_path+loaded_params.data_params.subreddit1} dataset with size: {len(subset1_df)}")
     subset2_df.to_csv(loaded_params.data_params.subset2_path+loaded_params.data_params.subreddit2+".csv", index=False)
-
+    logger.info(f"Saved {loaded_params.data_params.subset1_path+loaded_params.data_params.subreddit2} dataset with size: {len(subset2_df)}")
 if __name__ == "__main__":
     main()
 
