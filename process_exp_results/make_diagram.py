@@ -123,7 +123,7 @@ def process_one_gate(gates_files: List[str], model_name: str, catalog: str):
 def main():
 
     catalog = "process_exp_results/results/"
-    model_name = "moe_model"
+    model_name = "moe_model_128_10"
 
     files = []
     for file in os.listdir(catalog):
