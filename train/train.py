@@ -74,6 +74,9 @@ def main(config_model, config_dataset, config_train, tag):
     torch.manual_seed(train_params.random_seed)
     random.seed(train_params.random_seed)
     torch.backends.cudnn.deterministic = True
+    os.environ["PYTHONHASHSEED"] = str(train_params.random_seed)
+    torch.cuda.manual_seed_all(train_params.random_seed)
+    torch.backends.cudnn.benchmark = False
 
     # DATASET
     subreddit1_loaded = torch.load(
