@@ -1,6 +1,5 @@
 import os
 import sys
-
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -8,20 +7,21 @@ warnings.filterwarnings("ignore")
 sys.path.append(os.path.abspath(os.path.join(__file__, "../../")))
 
 import json
+import random
 from pathlib import Path
-from typing import Dict
 
 import click
-import datasets
 import numpy as np
 import torch
-import torch.nn.functional as F
 import transformers
-import yaml
 from accelerate import Accelerator
 from accelerate.utils import set_seed, tqdm
-from datasets import Dataset, DatasetDict
-from torch.utils.data import DataLoader
+from train_utils.data import PrepareDataloader, PrepareDataset
+from train_utils.gate import (
+    calculate_loss_accuracy,
+    epoch_gates_cat,
+    process_gate_response,
+)
 from transformers import AdamW
 
 from config_utils.load_config import (
@@ -31,17 +31,32 @@ from config_utils.load_config import (
     load_params_from_yaml,
 )
 from model.model_main import MoETransformerEncoder
-from train_utils.data import PrepareDataloader, PrepareDataset
 
 
 @click.command()
-@click.option('--config-model', type=Path, default="model_params.yaml", 
-              show_default=True, help="Path to the model configuration file.")
-@click.option('--config-dataset', type=Path, default="dataset_params.yaml", 
-              show_default=True, help="Path to the data configuration file.")
-@click.option('--config-train', type=Path, default="train_params.yaml", 
-              show_default=True, help="Path to the train configuration file.")
-def main(config_model, config_dataset, config_train):
+@click.option(
+    "--config-model",
+    type=Path,
+    default="model_params.yaml",
+    show_default=True,
+    help="Path to the model configuration file.",
+)
+@click.option(
+    "--config-dataset",
+    type=Path,
+    default="dataset_params.yaml",
+    show_default=True,
+    help="Path to the data configuration file.",
+)
+@click.option(
+    "--config-train",
+    type=Path,
+    default="train_params.yaml",
+    show_default=True,
+    help="Path to the train configuration file.",
+)
+@click.option("--tag", type=str, required=True, help="One tag to mark experiment")
+def main(config_model, config_dataset, config_train, tag):
 
     # LOAD PARAMS
 
@@ -49,19 +64,36 @@ def main(config_model, config_dataset, config_train):
     loaded_params = load_params_from_yaml(config_dataset, DataParamsSchema)
     train_params = load_params_from_yaml(config_train, TrainParamsSchema)
 
+    os.makedirs(train_params.save_path, exist_ok=True)
+
     # ВОСПРОИЗВОДИМОСТЬ ЭКСПЕРИМЕНТОВ
 
     set_seed(train_params.random_seed)
     torch.cuda.manual_seed(train_params.random_seed)
     np.random.seed(train_params.random_seed)
     torch.manual_seed(train_params.random_seed)
+    random.seed(train_params.random_seed)
+    torch.backends.cudnn.deterministic = True
+    os.environ["PYTHONHASHSEED"] = str(train_params.random_seed)
+    torch.cuda.manual_seed_all(train_params.random_seed)
+    torch.backends.cudnn.benchmark = False
 
     # DATASET
-    subreddit1_loaded=torch.load(loaded_params.data_params.masked_data_path + loaded_params.data_params.subreddit1+ ".pt")
-    subreddit2_loaded=torch.load(loaded_params.data_params.masked_data_path + loaded_params.data_params.subreddit2+ ".pt")
-    train_loaded = torch.load(loaded_params.data_params.masked_data_path + os.path.splitext(os.path.basename(loaded_params.data_params.train_data_path))[0]+ ".pt")
-    val_loaded = torch.load(loaded_params.data_params.masked_data_path + os.path.splitext(os.path.basename(loaded_params.data_params.test_data_path))[0]+ ".pt")
-    
+
+    train_loaded = torch.load(
+        loaded_params.data_params.masked_data_path
+        + os.path.splitext(os.path.basename(loaded_params.data_params.train_data_path))[
+            0
+        ]
+        + ".pt"
+    )
+    val_loaded = torch.load(
+        loaded_params.data_params.masked_data_path
+        + os.path.splitext(os.path.basename(loaded_params.data_params.test_data_path))[
+            0
+        ]
+        + ".pt"
+    )
 
     dataset = PrepareDataset(
         train_loaded,
@@ -80,6 +112,7 @@ def main(config_model, config_dataset, config_train):
     accelerator.init_trackers(
         train_params.experiment_name, config=json.loads(train_params.model_dump_json())
     )
+    accelerator.get_tracker("aim").writer.add_tag(tag)
 
     model = MoETransformerEncoder(**model_params.__dict__)
     optimizer = AdamW(
@@ -110,7 +143,7 @@ def main(config_model, config_dataset, config_train):
     # [хз что, n_layers, batch_size, max_len]
     val_gates_stats = torch.tensor([]).to(model_params.device)
 
-    with tqdm(desc="Training", total=total_steps) as pbar:
+    with tqdm(desc="Training", total=total_steps, dynamic_ncols=True) as pbar:
         for epoch in range(train_params.n_epochs):
 
             # [n_layers, batch_size, max_len]
@@ -128,42 +161,16 @@ def main(config_model, config_dataset, config_train):
                 with accelerator.accumulate(model):
                     output, gate_respond = model(input_ids)
 
-                    print("GATE_RESPOND_SHAPE", gate_respond.shape)
-
                     # extend and reshape to nessesary form [n_layers, batch_size, max_len]
-                    if epoch_gates_stats.size(0) == 0:
-                        epoch_gates_stats = gate_respond.flatten().reshape(
-                            model_params.n_encoder_blocks,
-                            train_params.batch_size,
-                            model_params.seq_len,
-                        )
-                    else:
-                        epoch_gates_stats = torch.cat(
-                            (
-                                epoch_gates_stats,
-                                gate_respond.flatten().reshape(
-                                    model_params.n_encoder_blocks,
-                                    train_params.batch_size,
-                                    model_params.seq_len,
-                                ),
-                            ),
-                            dim=0,
-                        )
+                    epoch_gates_stats = process_gate_response(
+                        epoch_gates_stats,
+                        gate_respond,
+                        train_params,
+                        model_params,
+                    )
 
-                    print("EPOCH_GATE_RESPOND_SHAPE", epoch_gates_stats.shape)
-
-                    mask = input_ids == train_params.tokenizer_mask_id
-                    masked_output = output[mask]
-                    masked_labels = labels[mask]
-
-                    loss = F.cross_entropy(masked_output, masked_labels)
-                    _, predicted = torch.max(masked_output, dim=-1)
-                    correct_predictions = (predicted == masked_labels).sum().item()
-                    total_predictions = masked_labels.size(0)
-                    accuracy = (
-                        correct_predictions / total_predictions
-                        if total_predictions > 0
-                        else 0.0
+                    loss, accuracy = calculate_loss_accuracy(
+                        input_ids, output, labels, train_params
                     )
 
                     accelerator.log(
@@ -182,7 +189,9 @@ def main(config_model, config_dataset, config_train):
                     current_step + 1
                 ) % train_params.eval_steps == 0 or current_step + 1 == total_steps:
                     model.eval()
-                    with tqdm(desc="Eval", total=len(val_dataloader)) as eval_pbar:
+                    with tqdm(
+                        desc="Eval", total=len(val_dataloader), dynamic_ncols=True
+                    ) as eval_pbar:
                         epoch_gates_stats_val = torch.tensor([]).to(model_params.device)
                         with torch.no_grad():
                             for eval_batch in val_dataloader:
@@ -193,52 +202,25 @@ def main(config_model, config_dataset, config_train):
                                 )
                                 output, gate_respond_val = model(input_ids)
 
-                                print("GATE_RESPOND_SHAPE VAL", gate_respond_val.shape)
-
-                                if epoch_gates_stats_val.size(0) == 0:
-                                    epoch_gates_stats_val = (
-                                        gate_respond_val.flatten().reshape(
-                                            model_params.n_encoder_blocks,
-                                            train_params.batch_size,
-                                            model_params.seq_len,
-                                        )
-                                    )
-                                else:
-                                    epoch_gates_stats_val = torch.cat(
-                                        (
-                                            epoch_gates_stats_val,
-                                            gate_respond_val.flatten().reshape(
-                                                model_params.n_encoder_blocks,
-                                                train_params.batch_size,
-                                                model_params.seq_len,
-                                            ),
-                                        ),
-                                        dim=0,
-                                    )
-
-                                print(
-                                    "EPOCH_GATE_RESPOND_SHAPE VAL",
-                                    epoch_gates_stats_val.shape,
+                                epoch_gates_stats_val = process_gate_response(
+                                    epoch_gates_stats_val,
+                                    gate_respond_val,
+                                    train_params,
+                                    model_params,
                                 )
 
-                                mask = input_ids == train_params.tokenizer_mask_id
-                                masked_output = output[mask]
-                                masked_labels = labels[mask]
+                                loss, accuracy = calculate_loss_accuracy(
+                                    input_ids, output, labels, train_params
+                                )
 
-                                loss = F.cross_entropy(masked_output, masked_labels)
-                                _, predicted = torch.max(masked_output, dim=-1)
-                                correct_predictions = (
-                                    (predicted == masked_labels).sum().item()
-                                )
-                                total_predictions = masked_labels.size(0)
-                                accuracy = (
-                                    correct_predictions / total_predictions
-                                    if total_predictions > 0
-                                    else 0.0
-                                )
                                 eval_pbar.update(1)
                                 accelerator.log(
-                                    {"accuracy eval": accuracy}, step=current_step + 1
+                                    {"accuracy_batch_eval": accuracy},
+                                    step=current_step + 1,
+                                )
+
+                                accelerator.log(
+                                    {"loss_batch_eval": loss}, step=current_step + 1
                                 )
                     model.train()
 
@@ -247,37 +229,26 @@ def main(config_model, config_dataset, config_train):
                 ) % train_params.save_steps == 0 or current_step + 1 == total_steps:
                     accelerator.wait_for_everyone()
                     accelerator.save_model(
-                        model, train_params.save_path / f"step_{current_step + 1}"
+                        model, Path(train_params.save_path) / f"step_{current_step + 1}"
                     )
 
-            if train_gates_stats.size(0) == 0:
-                train_gates_stats = epoch_gates_stats
-            else:
-                train_gates_stats = torch.cat(
-                    (
-                        train_gates_stats,
-                        epoch_gates_stats,
-                    ),
-                    dim=0,
-                )
+            train_gates_stats = epoch_gates_cat(train_gates_stats, epoch_gates_stats)
+            val_gates_stats = epoch_gates_cat(val_gates_stats, epoch_gates_stats_val)
 
-            if val_gates_stats.size(0) == 0:
-                val_gates_stats = epoch_gates_stats_val
-            else:
-                val_gates_stats = torch.cat(
-                    (
-                        val_gates_stats,
-                        epoch_gates_stats_val,
-                    ),
-                    dim=0,
-                )
-
-            print(train_gates_stats.shape)
-            print(val_gates_stats.shape)
+            torch.save(
+                train_gates_stats,
+                Path(train_params.save_path) / train_params.train_gatestats_filename,
+            )
+            torch.save(
+                val_gates_stats,
+                Path(train_params.save_path) / train_params.val_gatestats_filename,
+            )
 
     accelerator.end_training()
 
-    # TODO: add the processing of gates_respond to accelerator
+    torch.save(
+        model.state_dict(), Path(train_params.save_path) / train_params.model_filename
+    )
 
 
 if __name__ == "__main__":

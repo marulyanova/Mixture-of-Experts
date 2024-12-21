@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 import marshmallow
 
+
 @dataclass
 class DataParams:
     tokenizer_name: str
@@ -17,6 +18,7 @@ class DataParams:
         default=0.10, metadata={"validate": marshmallow.validate.Range(max=1)}
     )
 
+
 @dataclass
 class LoadParams:
     raw_data_path: str
@@ -30,6 +32,7 @@ class LoadParams:
     test_len: int = field(
         default=10000, metadata={"validate": marshmallow.validate.Range(min=1000)}
     )
+
 
 @dataclass
 class DataParams:

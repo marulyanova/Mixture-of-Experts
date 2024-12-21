@@ -1,12 +1,15 @@
-batch_size: 16
-n_epochs: 3 # TODO: change the number of epochs
-learning_rate: 0.001
+batch_size: 32
+n_epochs: 5
+learning_rate: 0.0005
 random_seed: 11
-gradient_accumulation_steps: 1 # TODO: change gradient_accumulation_steps
+gradient_accumulation_steps: 1 
 experiment_name: mixture_of_experts
 weight_decay: 0.00001
 warmup_proportion: 0.1
 tokenizer_mask_id: 103
-eval_steps: 20 # TODO: change eval_steps
-save_steps: 1000 # TODO: change save_steps
-save_path: . # TODO: add save_path
+eval_steps: 1000 
+save_steps: 2000
+save_path: train_results
+model_filename: moe_model.pth
+train_gatestats_filename: train_gates_stats.pt
+val_gatestats_filename: val_gates_stats.pt
