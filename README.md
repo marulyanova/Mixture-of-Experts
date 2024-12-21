@@ -6,7 +6,20 @@
 Реализована архитектура трансформер-энкодера с заменой FFN на MoE блок
 
 <img src="images/02_moe_block.png" width=1000>  
+
+[GShard paper](https://arxiv.org/abs/2006.16668)
+
 <img src="images/00_switch_transformer.png" width=1000>  
+
+[Switch Transformers paper](https://arxiv.org/abs/2101.03961)
+
+### TopK выбор экспертов
+
+Кроме того был выбран Sparse MoE подход и реализован topK выбор экспертов по принципу статьи [Mixtral of Experts](https://arxiv.org/pdf/2401.04088)
+
+<img src="images/topk.png" width=600>  
+
+[Guide for mixture of experts](hhttps://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts#footnote-3-148217245)
 
 
 
