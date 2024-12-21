@@ -12,6 +12,7 @@ from typing import List, Tuple
 
 import click
 import numpy as np
+import pandas as pd
 import torch
 from accelerate.utils import set_seed, tqdm
 from torch.utils.data import DataLoader
@@ -89,7 +90,14 @@ def eval_loop(
     show_default=True,
     help="Path to the train configuration file.",
 )
-def main(config_model, config_dataset, config_train):
+@click.option(
+    "--save_path",
+    type=str,
+    default="process_exp_results/results",
+    show_default=True,
+    help="Path to save test results.",
+)
+def main(config_model, config_dataset, config_train, save_path):
 
     # LOAD PARAMS
 
@@ -155,12 +163,17 @@ def main(config_model, config_dataset, config_train):
         loader_2, train_params, model_params, model
     )
 
-    print(epoch_gates_stats_val_1.shape, len(loss_1), len(accuracy_1))
-    print(epoch_gates_stats_val_2.shape, len(loss_2), len(accuracy_2))
+    modelname = train_params.model_filename.split(".")[0]
+    torch.save(epoch_gates_stats_val_1, save_path + f"/{modelname}_gates_1.pt")
+    torch.save(epoch_gates_stats_val_2, save_path + f"/{modelname}_gates_2.pt")
+    pd.DataFrame({"loss": loss_1, "accuracy": accuracy_1}).to_csv(
+        save_path + f"/{modelname}_metrics_1.csv", index=False
+    )
+    pd.DataFrame({"loss": loss_2, "accuracy": accuracy_2}).to_csv(
+        save_path + f"/{modelname}_metrics_2.csv", index=False
+    )
 
     print("SUCCESS!")
-
-    # TODO: do smth with results
 
 
 if __name__ == "__main__":

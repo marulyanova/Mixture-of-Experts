@@ -22,7 +22,7 @@ python train/train.py --config-model model_params.yaml --config-dataset dataset_
 
 ### 4. Запуск инференса
 ```bash
-python inference/inference.py --config-model model_params.yaml --config-dataset dataset_params.yaml --config-train train_params.yaml
+python inference/inference.py --config-model model_params.yaml --config-dataset dataset_params.yaml --config-train train_params.yaml --save_path process_exp_results/results
 ```
 или с параметрами по умолчанию 
 ```bash
