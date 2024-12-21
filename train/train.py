@@ -33,6 +33,11 @@ from config_utils.load_config import (
 )
 from model.model_main import MoETransformerEncoder
 from train_utils.data import PrepareDataloader, PrepareDataset
+from train_utils.gate import (
+    process_gate_response,
+    calculate_loss_accuracy,
+    epoch_gates_cat,
+)
 
 
 @click.command()
@@ -175,39 +180,17 @@ def main(config_model, config_dataset, config_train, tag):
                     # print("GATE_RESPOND_SHAPE", gate_respond.shape)
 
                     # extend and reshape to nessesary form [n_layers, batch_size, max_len]
-                    if epoch_gates_stats.size(0) == 0:
-                        epoch_gates_stats = gate_respond.flatten().reshape(
-                            model_params.n_encoder_blocks,
-                            train_params.batch_size,
-                            model_params.seq_len,
-                        )
-                    else:
-                        epoch_gates_stats = torch.cat(
-                            (
-                                epoch_gates_stats,
-                                gate_respond.flatten().reshape(
-                                    model_params.n_encoder_blocks,
-                                    train_params.batch_size,
-                                    model_params.seq_len,
-                                ),
-                            ),
-                            dim=0,
-                        )
+                    epoch_gates_stats = process_gate_response(
+                        epoch_gates_stats,
+                        gate_respond,
+                        train_params,
+                        model_params,
+                    )
 
                     # print("EPOCH_GATE_RESPOND_SHAPE", epoch_gates_stats.shape)
 
-                    mask = input_ids == train_params.tokenizer_mask_id
-                    masked_output = output[mask]
-                    masked_labels = labels[mask]
-
-                    loss = F.cross_entropy(masked_output, masked_labels)
-                    _, predicted = torch.max(masked_output, dim=-1)
-                    correct_predictions = (predicted == masked_labels).sum().item()
-                    total_predictions = masked_labels.size(0)
-                    accuracy = (
-                        correct_predictions / total_predictions
-                        if total_predictions > 0
-                        else 0.0
+                    loss, accuracy = calculate_loss_accuracy(
+                        input_ids, output, labels, train_params
                     )
 
                     accelerator.log(
@@ -226,7 +209,9 @@ def main(config_model, config_dataset, config_train, tag):
                     current_step + 1
                 ) % train_params.eval_steps == 0 or current_step + 1 == total_steps:
                     model.eval()
-                    with tqdm(desc="Eval", total=len(val_dataloader), dynamic_ncols=True) as eval_pbar:
+                    with tqdm(
+                        desc="Eval", total=len(val_dataloader), dynamic_ncols=True
+                    ) as eval_pbar:
                         epoch_gates_stats_val = torch.tensor([]).to(model_params.device)
                         with torch.no_grad():
                             for eval_batch in val_dataloader:
@@ -237,49 +222,22 @@ def main(config_model, config_dataset, config_train, tag):
                                 )
                                 output, gate_respond_val = model(input_ids)
 
-                                # print("GATE_RESPOND_SHAPE VAL", gate_respond_val.shape)
-
-                                if epoch_gates_stats_val.size(0) == 0:
-                                    epoch_gates_stats_val = (
-                                        gate_respond_val.flatten().reshape(
-                                            model_params.n_encoder_blocks,
-                                            train_params.batch_size,
-                                            model_params.seq_len,
-                                        )
-                                    )
-                                else:
-                                    epoch_gates_stats_val = torch.cat(
-                                        (
-                                            epoch_gates_stats_val,
-                                            gate_respond_val.flatten().reshape(
-                                                model_params.n_encoder_blocks,
-                                                train_params.batch_size,
-                                                model_params.seq_len,
-                                            ),
-                                        ),
-                                        dim=0,
-                                    )
+                                epoch_gates_stats_val = process_gate_response(
+                                    epoch_gates_stats_val,
+                                    gate_respond_val,
+                                    train_params,
+                                    model_params,
+                                )
 
                                 # print(
                                 #     "EPOCH_GATE_RESPOND_SHAPE VAL",
                                 #     epoch_gates_stats_val.shape,
                                 # )
 
-                                mask = input_ids == train_params.tokenizer_mask_id
-                                masked_output = output[mask]
-                                masked_labels = labels[mask]
+                                loss, accuracy = calculate_loss_accuracy(
+                                    input_ids, output, labels, train_params
+                                )
 
-                                loss = F.cross_entropy(masked_output, masked_labels)
-                                _, predicted = torch.max(masked_output, dim=-1)
-                                correct_predictions = (
-                                    (predicted == masked_labels).sum().item()
-                                )
-                                total_predictions = masked_labels.size(0)
-                                accuracy = (
-                                    correct_predictions / total_predictions
-                                    if total_predictions > 0
-                                    else 0.0
-                                )
                                 eval_pbar.update(1)
                                 accelerator.log(
                                     {"accuracy_batch_eval": accuracy},
@@ -299,27 +257,8 @@ def main(config_model, config_dataset, config_train, tag):
                         model, train_params.save_path / f"step_{current_step + 1}"
                     )
 
-            if train_gates_stats.size(0) == 0:
-                train_gates_stats = epoch_gates_stats
-            else:
-                train_gates_stats = torch.cat(
-                    (
-                        train_gates_stats,
-                        epoch_gates_stats,
-                    ),
-                    dim=0,
-                )
-
-            if val_gates_stats.size(0) == 0:
-                val_gates_stats = epoch_gates_stats_val
-            else:
-                val_gates_stats = torch.cat(
-                    (
-                        val_gates_stats,
-                        epoch_gates_stats_val,
-                    ),
-                    dim=0,
-                )
+            train_gates_stats = epoch_gates_cat(train_gates_stats, epoch_gates_stats)
+            val_gates_stats = epoch_gates_cat(val_gates_stats, epoch_gates_stats_val)
 
             # print(train_gates_stats.shape)
             # print(val_gates_stats.shape)

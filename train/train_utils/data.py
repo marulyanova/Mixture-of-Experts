@@ -32,12 +32,10 @@ def PrepareDataloader(
         dataset["train"],
         batch_size=train_params.batch_size,
         shuffle=True,
-        drop_last=True,
     )
     val_dataloader = DataLoader(
         dataset["val"],
         batch_size=train_params.batch_size,
         shuffle=False,
-        drop_last=True,
     )
     return train_dataloader, val_dataloader
