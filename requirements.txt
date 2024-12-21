@@ -1,0 +1,9 @@
+torch
+transformers
+marshmallow
+marshmallow_dataclass
+click
+scikit-learn
+accelerate
+aim
+loguru

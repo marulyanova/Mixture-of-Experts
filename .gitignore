@@ -1,0 +1,13 @@
+/model_utils/__pycache__
+test.py
+venv
+__pycache__/
+*.py[cod]
+.vscode
+
+data/masked/*.pt
+
+# results of training
+/train_results/*.pth
+/train_results/*.safetensors
+/train_results/*.pt
