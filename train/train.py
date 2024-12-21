@@ -254,7 +254,7 @@ def main(config_model, config_dataset, config_train, tag):
                 ) % train_params.save_steps == 0 or current_step + 1 == total_steps:
                     accelerator.wait_for_everyone()
                     accelerator.save_model(
-                        model, train_params.save_path / f"step_{current_step + 1}"
+                        model,  Path(train_params.save_path) / f"step_{current_step + 1}"
                     )
 
             train_gates_stats = epoch_gates_cat(train_gates_stats, epoch_gates_stats)
