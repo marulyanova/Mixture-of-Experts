@@ -24,6 +24,7 @@ from accelerate.utils import set_seed, tqdm
 from datasets import Dataset, DatasetDict
 from torch.utils.data import DataLoader
 from transformers import AdamW
+from loguru import logger
 
 from config_utils.load_config import (
     DataParamsSchema,
@@ -199,6 +200,8 @@ def main(config_model, config_dataset, config_train, tag):
                     accelerator.log(
                         {"train_batch_accuracy": accuracy}, step=current_step + 1
                     )
+                    logger.info(f"train_batch_loss: {loss.item()}")
+                    logger.info(f"train_batch_accuracy: {accuracy}")
                     accelerator.backward(loss)
                     optimizer.step()
                     scheduler.step()
@@ -247,6 +250,9 @@ def main(config_model, config_dataset, config_train, tag):
                                 accelerator.log(
                                     {"loss_batch_eval": loss}, step=current_step + 1
                                 )
+                                logger.info(f"accuracy_batch_eval: {accuracy}")
+                                logger.info(f"loss_batch_eval: {loss}")
+
                     model.train()
 
                 if (
