@@ -1,6 +1,14 @@
 # Mixture-of-Experts
 Проектная работа по курсу Advanced NLP. Transformer encoder с заменой MLP-блока на MOE для задачи MLM
 
+# Архитектура
+
+Реализована архитектура трансформер-энкодера с заменой FFN на MoE блок
+
+<img src="images/02_moe_block.png" width=1000>  
+<img src="images/00_switch_transformer.png" width=1000>  
+
+
 
 # Запуск эскпериментов
 * для получения пояснений к параметрам введите опцию --help
@@ -60,3 +68,39 @@ seg_len - максимальная длина последовательност
 mask_prob - процент замаскированных токенов в одной последовательности длины seg_len
 
 <img src="images/aim.png" width=1000>
+
+### Гистограммы активаций экспертов на тестируемых топиках
+
+---
+###  seg_len=64 mask_prob=0.15  
+|   <img src="process_exp_results/images/moe_model_all.png" width=500>       |     seg_len=64 mask_prob=0.15      |
+| -------- | -------- |
+| <img src="process_exp_results/images/moe_model_gaming.png" width=500> | <img src="process_exp_results/images/moe_model_programming.png" width=500> |
+
+---
+###  seg_len=64 mask_prob=0.05
+|   <img src="process_exp_results/images/moe_model_5_all.png" width=500>       |     seg_len=64 mask_prob=0.05     |
+| -------- | -------- |
+| <img src="process_exp_results/images/moe_model_5_gaming.png" width=500> | <img src="process_exp_results/images/moe_model_5_programming.png" width=500> |
+
+---
+###  seg_len=128 mask_prob=0.1 
+|   <img src="process_exp_results/images/moe_model_128_10_all.png" width=500>       |    seg_len=128 mask_prob=0.1    |
+| -------- | -------- |
+| <img src="process_exp_results/images/moe_model_128_10_gaming.png" width=500> | <img src="process_exp_results/images/moe_model_128_10_programming.png" width=500> |
+
+---
+###  seg_len=128 mask_prob=0.3 
+|   <img src="process_exp_results/images/moe_model_128_30_all.png" width=500>       |    seg_len=128 mask_prob=0.3    |
+| -------- | -------- |
+| <img src="process_exp_results/images/moe_model_128_30_gaming.png" width=500> | <img src="process_exp_results/images/moe_model_128_30_programming.png" width=500> |
+
+---
+
+# Выводы
+
+* Для достижения наилучшего результата при маскировании данных необходимо найти золотую середину между длиной последовательности и процентом замаскированных токенов: 
+    * хуже всего обучилась модель с 5% замаскированных токенов, то есть от 1 до 3 токенов в последовательности из 64
+    * наилучший резульатат достигла модель с 15% замаскированными токенами от длины последовательности 64 
+
+* Не выявлено разительных отличий в активации экспертов на разные топики, скорее всего это связано с качетвом датасета - стиль повествования и тексты у разных топиков не сильно отличаются. Кроме того, при воссоздании архитектуры были изучены другие исследования, в которых отмечено, что эксперты скорее регируют больше на "технические" особенности текста, например подмечают особую пунктуацию, а не тематику текста
