@@ -5,8 +5,9 @@ sys.path.append(os.path.abspath(os.path.join(__file__, "../../")))
 import click
 from pathlib import Path
 from datasets import Dataset
-from transformers import BertTokenizerFast
 import pandas as pd
+import torch
+import random
 
 from loguru import logger
 
@@ -32,6 +33,16 @@ def load_as_hf_dataset(datapath: Path) -> Dataset:
 def main(config_dataset,  config_model):
     dataset_params = load_params_from_yaml(config_dataset, DataParamsSchema)
     model_params = load_params_from_yaml(config_model, ModelParamsSchema)
+
+    # ВОСПРОИЗВОДИМОСТЬ 
+
+    random.seed(dataset_params.seed)
+    os.environ["PYTHONHASHSEED"] = str(dataset_params.seed)
+    torch.cuda.manual_seed(dataset_params.seed)
+    torch.manual_seed(dataset_params.seed)
+    torch.backends.cudnn.deterministic = True
+    torch.cuda.manual_seed_all(dataset_params.seed)
+    torch.backends.cudnn.benchmark = False
     
     paths = [ dataset_params.data_params.train_data_path, 
              dataset_params.data_params.test_data_path,

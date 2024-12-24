@@ -1,7 +1,3 @@
-import sys
-import os
-sys.path.append("../")
-
 import torch
 from transformers import BertTokenizerFast
 
