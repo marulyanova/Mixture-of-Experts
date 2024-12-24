@@ -70,8 +70,8 @@ python train/train.py --tag name
 # Результаты экспериментов
 
 ### Обученные модели
-1. seg_len=64 mask_prob=0.15 - красная (без тега)
-2. seg_len=64 mask_prob=0.05 - розовая (тег kaggle)
+1. seg_len=64 mask_prob=0.15 - красная (тег kaggle)
+2. seg_len=64 mask_prob=0.05 - розовая (тег kaggle-0.05)
 3. seg_len=128 mask_prob=0.1 - фиолетовая (тег kaggle-128-0.1)
 4. seg_len=128 mask_prob=0.3 - зеленая (тег kaggle-128-0.3)
 5. seg_len=64 mask_prob=0.15 - темно-синяя (тег kaggle-64-0.15-2)  
